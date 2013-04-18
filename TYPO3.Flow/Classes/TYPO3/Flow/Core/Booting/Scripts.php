@@ -267,6 +267,9 @@ class Scripts
         $cacheManager->injectConfigurationManager($configurationManager);
         $cacheManager->injectSystemLogger($bootstrap->getEarlyInstance(\TYPO3\Flow\Log\SystemLoggerInterface::class));
         $cacheManager->injectEnvironment($environment);
+        if ($bootstrap->getContext()->isDevelopment()) {
+            $cacheManager->checkContracts();
+        }
 
         $cacheFactory = new \TYPO3\Flow\Cache\CacheFactory($bootstrap->getContext(), $cacheManager, $environment);
 

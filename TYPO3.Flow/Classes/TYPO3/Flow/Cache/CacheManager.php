@@ -16,6 +16,7 @@ use TYPO3\Flow\Cache\Frontend\FrontendInterface;
 use TYPO3\Flow\Utility\Environment;
 use TYPO3\Flow\Utility\Files;
 use TYPO3\Flow\Utility\PhpAnalyzer;
+use TYPO3\Flow\Cache\Exception\InvalidContractException;
 
 /**
  * The Cache Manager
@@ -64,6 +65,19 @@ class CacheManager
             'backend' => \TYPO3\Flow\Cache\Backend\FileBackend::class,
             'backendOptions' => array(),
             'persistent' => false
+        )
+    );
+
+    /**
+     * @var array
+     */
+    protected $cacheContracts = array(
+        'Flow_Object_Classes' => array(
+            'frontend' => 'TYPO3\Flow\Cache\Frontend\PhpFrontend',
+            'backend'  => 'TYPO3\Flow\Cache\Backend\PhpCapableBackendInterface'
+        ),
+        'Flow_Reflection_RuntimeData' => array(
+            'backend' => 'TYPO3\Flow\Cache\Backend\FreezableBackendInterface'
         )
     );
 
@@ -127,6 +141,28 @@ class CacheManager
                 throw new \InvalidArgumentException('The cache configuration for cache "' . $identifier . '" was not an array as expected.', 1231259656);
             }
             $this->cacheConfigurations[$identifier] = $configuration;
+        }
+    }
+
+    /**
+     * Check that all cache configurations conform to their required contracts configured in
+     * class member $cacheContracts.
+     *
+     * @return void
+     * @throws InvalidContractException
+     */
+    public function checkContracts() {
+        foreach ($this->cacheContracts as $identifier => $contracts) {
+            foreach ($contracts as $type => $contract) {
+                $class = isset($this->cacheConfigurations[$identifier][$type]) ? $this->cacheConfigurations[$identifier][$type] : $this->cacheConfigurations['Default'][$type];
+                $contract = ltrim($contract, '\\');
+                $class = ltrim($class, '\\');
+                $classChain = array_merge(class_parents($class, TRUE), class_implements($class, TRUE));
+
+                if ($class !== $contract && !array_key_exists($contract, $classChain)) {
+                    throw new InvalidContractException('The ' . $type . ' for cache "' . $identifier . '" must be of type "' . $contract . '", but got "' . $class . '" instead.', 1366278572);
+                }
+            }
         }
     }
 
