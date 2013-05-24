@@ -86,7 +86,7 @@ class JsonViewTest extends \TYPO3\Flow\Tests\UnitTestCase
         $output[] = array($object, $configuration, $expected, 'by default, sub arrays of objects should not be serialized.');
 
         $object = array('foo' => 'bar', 1 => 'baz', 'deep' => array('test' => 'value'));
-        $configuration = array();
+        $configuration = array('_descendAll' => array('_descendAll' => array()));
         $expected = array('foo' => 'bar', 1 => 'baz', 'deep' => array('test' => 'value'));
         $output[] = array($object, $configuration, $expected, 'associative arrays should be serialized deeply');
 
@@ -98,7 +98,7 @@ class JsonViewTest extends \TYPO3\Flow\Tests\UnitTestCase
         $nestedObject = new \stdClass();
         $nestedObject->value1 = 'foo';
         $object = array($nestedObject);
-        $configuration = array();
+        $configuration = array('_descendAll' => array());
         $expected = array(array('value1' => 'foo'));
         $output[] = array($object, $configuration, $expected, 'array of objects should be serialized');
 
@@ -128,7 +128,7 @@ class JsonViewTest extends \TYPO3\Flow\Tests\UnitTestCase
         $nestedObject->value1 = 'foo';
         $value = new \SplObjectStorage();
         $value->attach($nestedObject);
-        $configuration = array();
+        $configuration = array('_descendAll' => array());
         $expected = array(array('value1' => 'foo'));
         $output[] = array($value, $configuration, $expected, 'SplObjectStorage with objects should be serialized');
 
@@ -385,7 +385,7 @@ class JsonViewTest extends \TYPO3\Flow\Tests\UnitTestCase
         $actualResult = $this->view->render();
         $this->assertEquals($expectedResult, $actualResult);
     }
-
+		$this->view->setConfiguration(array('_descendAll' => array()));
     /**
      * @test
      */
@@ -467,4 +467,43 @@ class JsonViewTest extends \TYPO3\Flow\Tests\UnitTestCase
         $unexpectedResult = json_encode($array);
         $this->assertNotEquals($unexpectedResult, $actualResult);
     }
+
+	/**
+	 * @test
+	 */
+	public function descendOptionsBehaveEquallyOnArraysAndObjects() {
+		$array = array('value1' => array('value1' => array('name' => 'Foo', 'secret' => TRUE), 'value2' => array('name' => 'Bar', 'secret' => FALSE), 'value3' => FALSE), 'value2' => TRUE);
+		$this->view->setConfiguration(array(
+			'value' => array(
+				'_descendAll' => array(
+					'_only' => array('value1', 'value2'),
+					'_descend' => array(
+						'value1' => array(
+							'_only' => array('name')
+						),
+						'value2' => array(
+							'_exclude' => array('name')
+						)
+					)
+				)
+			)
+		));
+		$expectedResult = '{"value1":{"value1":{"name":"Foo"},"value2":{"secret":false}},"value2":true}';
+
+		$this->view->assign('value', $array);
+		$actualResult = $this->view->render();
+		$this->assertEquals($expectedResult, $actualResult, 'Array rendering doesn\'t behave expectedly');
+
+		function arrayToObject($array) {
+			if (is_array($array)) {
+				return (object)array_map(__FUNCTION__, $array);
+			} else {
+				return $array;
+			}
+		}
+		$object = arrayToObject($array);
+		$this->view->assign('value', $object);
+		$actualResult = $this->view->render();
+		$this->assertEquals($expectedResult, $actualResult, 'Object rendering doesn\'t behave expectedly');
+	}
 }
