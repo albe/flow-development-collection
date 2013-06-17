@@ -446,6 +446,8 @@ class ActionController extends AbstractController
             $this->response->appendContent($this->view->render());
         } elseif (is_string($actionResult) && strlen($actionResult) > 0) {
             $this->response->appendContent($actionResult);
+        } elseif (is_object($actionResult) && $actionResult instanceof \TYPO3\Flow\Resource\Resource) {
+            $this->response->setResource($actionResult);
         } elseif (is_object($actionResult) && method_exists($actionResult, '__toString')) {
             $this->response->appendContent((string)$actionResult);
         }

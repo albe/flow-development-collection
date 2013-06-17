@@ -46,6 +46,30 @@ class Response extends AbstractMessage implements ResponseInterface
     protected $now;
 
     /**
+     * The byte position from where to start sending
+     * @var integer
+     */
+    protected $rangeStart = 0;
+
+    /**
+     * The byte length to send in total
+     * @var integer
+     */
+    protected $rangeLength = NULL;
+
+    /**
+     * The resource to return
+     * @var \TYPO3\Flow\Resource\Resource
+     */
+    protected $resource;
+
+    /**
+     * The size of a single data packet in bytes that large files are delivered in
+     * @var integer
+     */
+    static protected $outputBufferLength = 16384;
+
+    /**
      * Returns the human-readable message for the given status code.
      *
      * @param integer $statusCode
@@ -112,6 +136,7 @@ class Response extends AbstractMessage implements ResponseInterface
     {
         $this->headers = new Headers();
         $this->headers->set('Content-Type', 'text/html; charset=' . $this->charset);
+        $this->headers->set('Accept-Ranges', 'bytes');
         $this->parentResponse = $parentResponse;
     }
 
@@ -199,8 +224,45 @@ class Response extends AbstractMessage implements ResponseInterface
      */
     public function getContent()
     {
-        return $this->content;
+        if ($this->rangeLength === 0) {
+            return '';
+        }
+        if ($this->resource !== NULL) {
+            $fileHandle = fopen($this->resource->getUri(), 'rb');
+            if ($fileHandle !== FALSE) {
+                fseek($fileHandle, $this->rangeStart, SEEK_SET);
+                $rangeLength = ($this->rangeLength === NULL) ? ($this->resource->getFilesize() - $this->rangeStart) : $this->rangeLength;
+                $content = fread($fileHandle, $rangeLength);
+                fclose($fileHandle);
+                return $content;
+            }
+        } elseif ($this->content !== NULL) {
+            if ($this->rangeLength === NULL) {
+                return substr($this->content, $this->rangeStart);
+            } else {
+                return substr($this->content, $this->rangeStart, $this->rangeLength);
+            }
+        }
     }
+
+	/**
+	 * Sets a resource to be the response content
+	 *
+	 * @param \TYPO3\Flow\Resource\Resource $resource The resource to use as response
+	 * @return \TYPO3\Flow\Http\Response This response, for method chaining
+	 * @api
+	 */
+	public function setResource(\TYPO3\Flow\Resource\Resource $resource)
+    {
+		$this->resource = $resource;
+		if ($this->resource !== null) {
+			$this->headers->set('Content-Type', $this->resource->getMediaType(), true);
+			if (!$this->headers->has('Last-Modified')) {
+				$this->headers->set('Last-Modified', $this->resource->getLastModified());
+			}
+		}
+		return $this;
+	}
 
     /**
      * Sets the HTTP status code and (optionally) a customized message.
@@ -234,6 +296,31 @@ class Response extends AbstractMessage implements ResponseInterface
     {
         return $this->statusCode . ' ' . $this->statusMessage;
     }
+
+	/**
+	 * Returns the total length of the content.
+	 *
+	 * @return integer The response content length
+	 * @api
+	 */
+	public function getContentLength()
+    {
+		if ($this->resource !== null) {
+			return $this->resource->getFilesize();
+		}
+		return strlen($this->content);
+	}
+
+	/**
+	 * Set an empty return content
+	 *
+	 * @return void
+	 */
+	protected function setEmptyContent()
+    {
+		$this->content = '';
+		$this->rangeStart = $this->rangeLength = 0;
+	}
 
     /**
      * Returns the status code.
@@ -515,6 +602,60 @@ class Response extends AbstractMessage implements ResponseInterface
     }
 
     /**
+     * Set content range according to range header given.
+     *
+     * @param string $rangeHeader
+     * @return void
+     */
+    protected function setContentRangeByRangeHeader($rangeHeader)
+    {
+        if (substr($rangeHeader,0,6) !== 'bytes=') {
+            return $this->setStatus(416);
+        }
+
+        $ranges = explode(',', substr($rangeHeader,6));
+        if (count($ranges) > 1) {
+            // TODO: Add support for multipart response
+            return $this->setStatus(416);
+        }
+
+        foreach ($ranges as $range) {
+            list($rangeStart, $rangeEnd) = explode('-', $range);
+
+            if ($rangeStart !== '') {
+                if ($rangeStart > $this->getContentLength()) {
+                    return $this->setStatus(416);
+                }
+
+                if ($rangeEnd === '' || $rangeEnd >= $this->getContentLength()) {
+                    $rangeEnd = $this->getContentLength() - 1;
+                }
+
+                if ($rangeStart > $rangeEnd) {
+                    return;
+                }
+
+                $this->rangeStart = $rangeStart;
+                $this->rangeLength = $rangeEnd - $rangeStart + 1;
+                $range = $rangeStart . '-' . $rangeEnd;
+            } else {
+                if ($rangeEnd > $this->getContentLength()) {
+                    $rangeEnd = $this->getContentLength();
+                }
+                $this->rangeStart = $this->getContentLength() - $rangeEnd;
+                $this->rangeLength = $rangeEnd;
+                $range = $this->rangeStart . '-' . ($this->getContentLength() - 1);
+            }
+            if ($this->rangeStart === 0 && $this->rangeLength === $this->getContentLength() - 1) {
+                return;
+            }
+            $this->setHeader('Content-Range', 'bytes ' . $range . '/' . $this->getContentLength());
+            $this->setHeader('Content-Length', $this->rangeLength, TRUE);
+        }
+        $this->setStatus(206);
+    }
+
+    /**
      * Analyzes this response, considering the given request and makes additions
      * or removes certain headers in order to make the response compliant to
      * RFC 2616 and related standards.
@@ -528,24 +669,43 @@ class Response extends AbstractMessage implements ResponseInterface
      */
     public function makeStandardsCompliant(Request $request)
     {
+        $ignoreRange = false;
         if ($request->hasHeader('If-Modified-Since') && $this->headers->has('Last-Modified') && $this->statusCode === 200) {
             $ifModifiedSinceDate = $request->getHeader('If-Modified-Since');
             $lastModifiedDate = $this->headers->get('Last-Modified');
             if ($lastModifiedDate <= $ifModifiedSinceDate) {
                 $this->setStatus(304);
-                $this->content = '';
+                $this->setEmptyContent();
             }
         } elseif ($request->hasHeader('If-Unmodified-Since') && $this->headers->has('Last-Modified')
-                && (($this->statusCode >= 200 && $this->statusCode <= 299) || $this->statusCode === 412)) {
+            && (($this->statusCode >= 200 && $this->statusCode <= 299) || $this->statusCode === 412)) {
             $unmodifiedSinceDate = $request->getHeader('If-Unmodified-Since');
             $lastModifiedDate = $this->headers->get('Last-Modified');
             if ($lastModifiedDate > $unmodifiedSinceDate) {
                 $this->setStatus(412);
             }
+        } elseif ($request->hasHeader('If-Range') && $request->hasHeader('Range') && $this->statusCode === 200) {
+            $ifRange = $request->getHeader('If-Range');
+            if ($ifRange instanceof \DateTime) {
+                if (!$this->headers->has('Last-Modified') || $this->headers->get('Last-Modified') > $ifRange) {
+                    $ignoreRange = true;
+                }
+            } elseif (!$this->headers->has('ETag') || $ifRange !== $this->headers->get('ETag')) {
+                $ignoreRange = true;
+            }
+        }
+
+        if (!$ignoreRange && $request->getMethod() === 'GET' && $request->hasHeader('Range') && $this->statusCode === 200) {
+            $this->setContentRangeByRangeHeader($request->getHeader('Range'));
+        }
+
+        if ($this->statusCode === 416) {
+            $this->setHeader('Content-Range', 'bytes */' . $this->getContentLength());
+            $this->setEmptyContent();
         }
 
         if (in_array($this->statusCode, array(100, 101, 204, 304))) {
-            $this->content = '';
+            $this->setEmptyContent();
         }
 
         if ($this->headers->getCacheControlDirective('no-cache') !== null
@@ -553,15 +713,12 @@ class Response extends AbstractMessage implements ResponseInterface
             $this->headers->removeCacheControlDirective('max-age');
         }
 
-        if ($request->getMethod() === 'HEAD') {
-            if (!$this->headers->has('Content-Length')) {
-                $this->headers->set('Content-Length', strlen($this->content));
-            }
-            $this->content = '';
+        if (!$this->headers->has('Content-Length')) {
+            $this->headers->set('Content-Length', $this->getContentLength());
         }
 
-        if (!$this->headers->has('Content-Length')) {
-            $this->headers->set('Content-Length', strlen($this->content));
+        if ($request->getMethod() === 'HEAD') {
+            $this->setEmptyContent();
         }
 
         if ($this->headers->has('Transfer-Encoding')) {
@@ -601,8 +758,29 @@ class Response extends AbstractMessage implements ResponseInterface
     public function send()
     {
         $this->sendHeaders();
-        if ($this->content !== null) {
-            echo $this->getContent();
+        if ($this->rangeLength === 0) {
+            return;
+        }
+        if ($this->resource !== NULL) {
+            $fileHandle = fopen($this->resource->getUri(), 'rb');
+            if ($fileHandle !== FALSE) {
+                fseek($fileHandle, $this->rangeStart, SEEK_SET);
+                $rangeLength = ($this->rangeLength === NULL) ? ($this->resource->getFilesize() - $this->rangeStart) : $this->rangeLength;
+                $sent = 0;
+                while (!feof($fileHandle) && connection_status() === 0 && $sent < $rangeLength) {
+                    $content = fread($fileHandle, self::$outputBufferLength);
+                    $sent += strlen($content);
+                    echo $content;
+                    flush();
+                }
+                fclose($fileHandle);
+            }
+        } elseif ($this->content !== NULL) {
+            if ($this->rangeLength === NULL) {
+                echo substr($this->content, $this->rangeStart);
+            } else {
+                echo substr($this->content, $this->rangeStart, $this->rangeLength);
+            }
         }
     }
 

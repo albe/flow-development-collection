@@ -13,6 +13,7 @@ namespace TYPO3\Flow\Tests\Functional\Mvc\Fixtures\Controller;
 
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Mvc\Controller\ActionController;
+use TYPO3\Flow\Resource\Resource;
 
 /**
  * A controller fixture
@@ -21,6 +22,12 @@ use TYPO3\Flow\Mvc\Controller\ActionController;
  */
 class ActionControllerTestAController extends ActionController
 {
+    /**
+     * @var \TYPO3\Flow\Resource\ResourceManager
+     * @Flow\Inject
+     */
+    protected $resourceManager;
+
     /**
      * @var array
      */
@@ -73,6 +80,15 @@ class ActionControllerTestAController extends ActionController
     public function putAction($putArgument, $getArgument)
     {
         return 'putAction-' . $putArgument . '-' . $getArgument;
+    }
+
+    /**
+     * @return \TYPO3\Flow\Resource\Resource
+     */
+    public function resourceAction()
+    {
+        $resource = $this->resourceManager->importResource(realpath(FLOW_PATH_FLOW . '/TYPO3.Flow/Tests/Functional/Mvc/Fixtures/Resource.json'));
+        return $resource;
     }
 
     /**

@@ -175,6 +175,51 @@ class ActionControllerTest extends \TYPO3\Flow\Tests\FunctionalTestCase
         $response = $this->browser->request('http://localhost/test/mvc/actioncontrollertesta/ignorevalidation?brokenArgument1=toolong&brokenArgument2=tooshort');
         $this->assertEquals('action was called', $response->getContent());
     }
+	/**
+	 * @test
+	 */
+	public function controllerCanReturnResource() {
+		$response = $this->browser->request('http://localhost/test/mvc/actioncontrollertesta/resource');
+		$this->assertEquals('{"message":"The quick brown fox jumps over the lazy dog"}', $response->getContent());
+	}
+
+	/**
+	 * @test
+	 */
+	public function rangeRequestsAreSupportedWithResources() {
+		$request = Request::create(new Uri('http://localhost/test/mvc/actioncontrollertesta/resource'));
+		$request->setHeader('Range', 'bytes=1-9');
+
+		$response = $this->browser->sendRequest($request);
+		$this->assertEquals('206 Partial Content', $response->getStatus());
+		$this->assertEquals('bytes 1-9/', substr($response->getHeader('Content-Range'), 0, 10));
+		$this->assertEquals('"message"', $response->getContent());
+	}
+
+	/**
+	 * @test
+	 */
+	public function rangeRequestsAreSupported() {
+		$request = Request::create(new Uri('http://localhost/test/mvc/actioncontrollertesta'));
+		$request->setHeader('Range', 'bytes=6-');
+
+		$response = $this->browser->sendRequest($request);
+		$this->assertEquals('206 Partial Content', $response->getStatus());
+		$this->assertEquals('bytes 6-22/23', $response->getHeader('Content-Range'));
+		$this->assertEquals('action was called', $response->getContent());
+	}
+
+	/**
+	 * @test
+	 */
+	public function objectArgumentsAreValidatedByDefault() {
+		$arguments = array(
+			'argument' => array(
+				'name' => 'Foo',
+				'emailAddress' => '-invalid-'
+			)
+		);
+		$response = $this->browser->request('http://localhost/test/mvc/actioncontrollertestb/requiredobject', 'POST', $arguments);
 
     /**
      * @test

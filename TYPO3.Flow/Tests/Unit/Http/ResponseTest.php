@@ -217,6 +217,7 @@ class ResponseTest extends \TYPO3\Flow\Tests\UnitTestCase
         $expectedHeaders = array(
             'HTTP/1.1 123 Custom Status',
             'Content-Type: text/html; charset=UTF-8',
+            'Accept-Ranges: bytes',
             'MyHeader: MyValue',
             'OtherHeader: OtherValue',
         );
@@ -580,6 +581,100 @@ class ResponseTest extends \TYPO3\Flow\Tests\UnitTestCase
     }
 
     /**
+     * Data provider
+     */
+    public function validContentRanges()
+    {
+        return array(
+            array( 'bytes=0-999', 'bytes 0-999/', 0, 1000),
+            array( 'bytes=400-', 'bytes 400-999/', 400, 600),
+            array( 'bytes=-300', 'bytes 700-999/', -300, 300),
+        );
+    }
+
+    /**
+     * RFC 2616 / 14.16 (Content Range)
+     * RFC 2616 / 14.35 (Range)
+     * RFC 2616 / 10.2.7
+     *
+     * @test
+     * @dataProvider validContentRanges
+     */
+    public function makeStandardsCompliantSetsProperContentRangeForValidRangeRequests($rangeHeader, $expectedContentRange, $expectedContentStart, $expectedContentLength)
+    {
+        $request = Request::create(new Uri('http://localhost'));
+        $request->setHeader('Range', $rangeHeader);
+
+        $content = str_repeat('abcdefghijklmnopqrstuvwxyz', 100);
+
+        $response = new Response();
+        $response->setContent($content);
+        $response->makeStandardsCompliant($request);
+        $this->assertEquals($expectedContentRange . strlen($content), $response->getHeader('Content-Range'));
+        $this->assertEquals(206, $response->getStatusCode());
+        $this->assertEquals($expectedContentLength, $response->getHeader('Content-Length'));
+
+        ob_start();
+        $response->send();
+        $output = ob_get_contents();
+        ob_end_clean();
+        $this->assertEquals(substr($content, $expectedContentStart, $expectedContentLength), $output);
+    }
+
+    /**
+     * Data provider
+     */
+    public function unsatisfiableContentRanges()
+    {
+        return array(
+            array( 'bits=0-4096'),
+            array( 'bytes=1001-2000' ),
+        );
+    }
+
+    /**
+     * RFC 2616 / 14.35 (Range)
+     * RFC 2616 / 10.4.17
+     *
+     * @test
+     * @dataProvider unsatisfiableContentRanges
+     */
+    public function makeStandardsCompliantSetsStatus416ForUnsatisfiableRangeRequests($rangeHeader)
+    {
+        $request = Request::create(new Uri('http://localhost'));
+        $request->setHeader('Range', $rangeHeader);
+
+        $content = str_repeat('?', 1000);
+
+        $response = new Response();
+        $response->setContent($content);
+        $response->makeStandardsCompliant($request);
+        $this->assertEquals('bytes */1000', $response->getHeader('Content-Range'));
+        $this->assertEquals(416, $response->getStatusCode());
+        $this->assertEquals(0, $response->getHeader('Content-Length'));
+    }
+
+    /**
+     * RFC 2616 / 14.35 (Range)
+     *
+     * @test
+     */
+    public function makeStandardsCompliantIgnoresSyntacticallyInvalidRangeRequests()
+    {
+        $request = Request::create(new Uri('http://localhost'));
+        $request->setHeader('Range', 'bytes=501-500');
+
+        $content = str_repeat('?', 1000);
+
+        $response = new Response();
+        $response->setContent($content);
+        $response->makeStandardsCompliant($request);
+        $this->assertFalse($response->hasHeader('Content-Range'));
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(1000, $response->getHeader('Content-Length'));
+    }
+
+    /**
      * @test
      */
     public function getParentResponseReturnsResponseSetInConstructor()
@@ -651,4 +746,34 @@ class ResponseTest extends \TYPO3\Flow\Tests\UnitTestCase
         $response->setContent($content);
         $this->assertSame($expectedString, (string)$response);
     }
+
+	/**
+	 * @test
+	 */
+	public function setResourceSetsProperContentTypeAccordingToResourceMediaType()
+    {
+		$resource = new \TYPO3\Flow\Resource\Resource();
+		$resource->setFilename('file.zip');
+		$response = new Response();
+		$response->setResource($resource);
+		$this->assertSame('application/zip', $response->getHeader('Content-Type'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function setResourceSetsLastModifiedIfNotSet()
+    {
+		$resource = new \TYPO3\Flow\Resource\Resource();
+		$resource->setFilename('file.zip');
+		$response = new Response();
+		$response->setResource($resource);
+		$this->assertEquals($resource->getLastModified(), $response->getHeader('Last-Modified'));
+
+		$resourceMock = $this->getAccessibleMock('\TYPO3\Flow\Resource\Resource', array('dummy'));
+		$resourceMock->setFilename('file.zip');
+		$resourceMock->_set('lastModified', new \DateTime('2000-01-01'));
+		$response->setResource($resourceMock);
+		$this->assertEquals($resource->getLastModified(), $response->getHeader('Last-Modified'));
+	}
 }
