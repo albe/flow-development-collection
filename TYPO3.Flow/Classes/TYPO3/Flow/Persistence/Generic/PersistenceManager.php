@@ -250,7 +250,7 @@ class PersistenceManager extends \TYPO3\Flow\Persistence\AbstractPersistenceMana
      */
     public function getObjectByIdentifier($identifier, $objectType = null, $useLazyLoading = false)
     {
-        if (isset($this->newObjects[$identifier])) {
+        if (is_string($identifier) && isset($this->newObjects[$identifier])) {
             return $this->newObjects[$identifier];
         }
         if ($this->persistenceSession->hasIdentifier($identifier)) {

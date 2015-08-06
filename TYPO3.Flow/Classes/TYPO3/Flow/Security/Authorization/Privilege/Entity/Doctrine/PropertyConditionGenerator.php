@@ -333,6 +333,7 @@ class PropertyConditionGenerator implements SqlGeneratorInterface
                 if (is_object($parameterValue)) {
                     $parameterValue = $this->persistenceManager->getIdentifierByObject($parameter->getValue());
                 }
+                // TODO: Handle composite keys properly
                 $subselectSql = preg_replace('/\?/', $this->entityManager->getConnection()->quote($parameterValue, $parameter->getType()), $subselectSql, 1);
             }
             $quotedColumnName = $quoteStrategy->getJoinColumnName($joinColumn, $targetEntity, $this->entityManager->getConnection()->getDatabasePlatform());

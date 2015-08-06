@@ -76,6 +76,9 @@ class PersistenceManager extends \TYPO3\Flow\Persistence\AbstractPersistenceMana
             $className = TypeHandling::getTypeForValue($entity);
             if ($this->reflectionService->getClassSchema($className)->getModelType() === ClassSchema::MODELTYPE_VALUEOBJECT) {
                 $identifier = $this->getIdentifierByObject($entity);
+                if (is_array($identifier)) {
+                    $identifier = implode(' ', $identifier);
+                }
 
                 if (isset($knownValueObjects[$className][$identifier]) || $unitOfWork->getEntityPersister($className)->exists($entity)) {
                     unset($entityInsertions[spl_object_hash($entity)]);
@@ -214,7 +217,7 @@ class PersistenceManager extends \TYPO3\Flow\Persistence\AbstractPersistenceMana
         }
         if ($this->entityManager->contains($object)) {
             try {
-                return current($this->entityManager->getUnitOfWork()->getEntityIdentifier($object));
+                return $this->entityManager->getUnitOfWork()->getEntityIdentifier($object);
             } catch (\Doctrine\ORM\ORMException $exception) {
             }
         }
@@ -237,7 +240,7 @@ class PersistenceManager extends \TYPO3\Flow\Persistence\AbstractPersistenceMana
         if ($objectType === null) {
             throw new \RuntimeException('Using only the identifier is not supported by Doctrine 2. Give classname as well or use repository to query identifier.', 1296646103);
         }
-        if (isset($this->newObjects[$identifier])) {
+        if (is_string($identifier) && isset($this->newObjects[$identifier])) {
             return $this->newObjects[$identifier];
         }
         if ($useLazyLoading === true) {
