@@ -238,6 +238,39 @@ class QueryTest extends \TYPO3\Flow\Tests\FunctionalTestCase
     /**
      * @test
      */
+    public function implicitJoinQueryOnlyReturnsDistinctEntitiesByDefault()
+    {
+        $testEntityRepository = new \TYPO3\Flow\Tests\Functional\Persistence\Fixtures\TestEntityRepository();
+        $testEntityRepository->removeAll();
+
+        $testEntity = new \TYPO3\Flow\Tests\Functional\Persistence\Fixtures\TestEntity;
+        $testEntity->setName('Flow');
+
+        $subEntity1 = new \TYPO3\Flow\Tests\Functional\Persistence\Fixtures\SubEntity;
+        $subEntity1->setContent('value');
+        $subEntity1->setParentEntity($testEntity);
+        $testEntity->addSubEntity($subEntity1);
+        $this->persistenceManager->add($subEntity1);
+
+        $subEntity2 = new \TYPO3\Flow\Tests\Functional\Persistence\Fixtures\SubEntity;
+        $subEntity2->setContent('value');
+        $subEntity2->setParentEntity($testEntity);
+        $testEntity->addSubEntity($subEntity2);
+        $this->persistenceManager->add($subEntity2);
+
+        $testEntityRepository->add($testEntity);
+
+        $this->persistenceManager->persistAll();
+
+        $query = new Query(\TYPO3\Flow\Tests\Functional\Persistence\Fixtures\TestEntity::class);
+        $entities = $query->matching($query->equals('subEntities.content', 'value'))->execute(false)->toArray();
+
+        $this->assertEquals(1, count($entities));
+    }
+
+    /**
+     * @test
+     */
     public function comlexQueryWithJoinsCanBeExecutedAfterDeserialization()
     {
         $postEntityRepository = new \TYPO3\Flow\Tests\Functional\Persistence\Fixtures\PostRepository;

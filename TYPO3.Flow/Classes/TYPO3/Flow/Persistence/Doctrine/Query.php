@@ -650,6 +650,7 @@ class Query implements \TYPO3\Flow\Persistence\QueryInterface
             $this->joins[$joinAlias] = $previousJoinAlias . '.' . $propertyPathParts[$i];
             $previousJoinAlias = $joinAlias;
         }
+        $this->setDistinct(true);
 
         return $previousJoinAlias . '.' . $propertyPathParts[$i];
     }
