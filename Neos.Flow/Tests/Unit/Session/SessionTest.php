@@ -11,6 +11,7 @@ namespace Neos\Flow\Tests\Unit\Session;
  * source code.
  */
 
+use Neos\Flow\Core\RequestHandlerInterface;
 use org\bovigo\vfs\vfsStream;
 use Neos\Cache\Backend\FileBackend;
 use Neos\Cache\EnvironmentConfiguration;
@@ -59,6 +60,16 @@ class SessionTest extends UnitTestCase
     protected $mockObjectManager;
 
     /**
+     * @var VariableFrontend
+     */
+    protected $metaDataCache;
+
+    /**
+     * @var VariableFrontend
+     */
+    protected $storageCache;
+
+    /**
      * @var array
      */
     protected $settings = [
@@ -92,28 +103,41 @@ class SessionTest extends UnitTestCase
         $this->httpResponse = new Http\Response();
 
         $mockRequestHandler = $this->createMock(Http\RequestHandler::class);
-        $mockRequestHandler->expects($this->any())->method('getHttpRequest')->will($this->returnValue($this->httpRequest));
-        $mockRequestHandler->expects($this->any())->method('getHttpResponse')->will($this->returnValue($this->httpResponse));
+        $mockRequestHandler->expects($this->any())->method('getHttpRequest')->willReturn($this->httpRequest);
+        $mockRequestHandler->expects($this->any())->method('getHttpResponse')->willReturn($this->httpResponse);
 
         $this->mockBootstrap = $this->createMock(Bootstrap::class);
-        $this->mockBootstrap->expects($this->any())->method('getActiveRequestHandler')->will($this->returnValue($mockRequestHandler));
+        $this->mockBootstrap->expects($this->any())->method('getActiveRequestHandler')->willReturn($mockRequestHandler);
 
         $this->mockSecurityContext = $this->createMock(Context::class);
 
         $this->mockObjectManager = $this->createMock(ObjectManagerInterface::class);
-        $this->mockObjectManager->expects($this->any())->method('get')->with(Context::class)->will($this->returnValue($this->mockSecurityContext));
+        $this->mockObjectManager->expects($this->any())->method('get')->with(Context::class)->willReturn($this->mockSecurityContext);
+
+        $this->metaDataCache = $this->createCache('Meta');
+        $this->storageCache = $this->createCache('Storage');
     }
 
+    protected function createSession(...$arguments) {
+        $session = new Session(...$arguments);
+        $this->inject($session, 'bootstrap', $this->mockBootstrap);
+        $this->inject($session, 'objectManager', $this->mockObjectManager);
+        $this->inject($session, 'settings', $this->settings);
+        $this->inject($session, 'metaDataCache', $this->metaDataCache);
+        $this->inject($session, 'storageCache', $this->storageCache);
+        $session->initializeObject();
+        return $session;
+    }
     /**
      * @test
      */
     public function constructCreatesARemoteSessionIfSessionIfIdentifierIsSpecified()
     {
         $storageIdentifier = '6e988eaa-7010-4ee8-bfb8-96ea4b40ec16';
-        $session = new Session('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259);
+        $session = $this->createSession('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259);
         $this->assertTrue($session->isRemote());
 
-        $session = new Session();
+        $session = $this->createSession();
         $this->assertFalse($session->isRemote());
     }
 
@@ -132,15 +156,10 @@ class SessionTest extends UnitTestCase
     public function remoteSessionUsesStorageIdentifierPassedToConstructor()
     {
         $storageIdentifier = '6e988eaa-7010-4ee8-bfb8-96ea4b40ec16';
-        $session = new Session('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
+        $session = $this->createSession('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
 
-        $metaDataCache = $this->createCache('Meta');
         $storageCache = $this->createCache('Storage');
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
         $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
 
         $this->assertFalse($session->hasKey('some key'));
         $session->putData('some key', 'some value');
@@ -156,8 +175,7 @@ class SessionTest extends UnitTestCase
      */
     public function canBeResumedReturnsFalseIfNoSessionCookieExists()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
+        $session = $this->createSession();
         $this->assertFalse($session->canBeResumed());
     }
 
@@ -166,12 +184,7 @@ class SessionTest extends UnitTestCase
      */
     public function canBeResumedReturnsFalseIfTheSessionHasAlreadyBeenStarted()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
 
@@ -183,16 +196,7 @@ class SessionTest extends UnitTestCase
      */
     public function canBeResumedReturnsFalseIfSessionIsExpiredAndExpiresASessionIfLastActivityIsOverTheLimit()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $sessionIdentifier = $session->getId();
@@ -200,9 +204,9 @@ class SessionTest extends UnitTestCase
 
         $this->assertTrue($session->canBeResumed());
 
-        $sessionInfo = $metaDataCache->get($sessionIdentifier);
+        $sessionInfo = $this->metaDataCache->get($sessionIdentifier);
         $sessionInfo['lastActivityTimestamp'] = time() - 4000;
-        $metaDataCache->set($sessionIdentifier, $sessionInfo, [$sessionInfo['storageIdentifier'], 'session'], 0);
+        $this->metaDataCache->set($sessionIdentifier, $sessionInfo, [$sessionInfo['storageIdentifier'], 'session'], 0);
         $this->assertFalse($session->canBeResumed());
     }
 
@@ -211,7 +215,7 @@ class SessionTest extends UnitTestCase
      */
     public function isStartedReturnsFalseByDefault()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $this->assertFalse($session->isStarted());
     }
 
@@ -220,12 +224,8 @@ class SessionTest extends UnitTestCase
      */
     public function isStartedReturnsTrueAfterSessionHasBeenStarted()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
+
         $session->start();
         $this->assertTrue($session->isStarted());
     }
@@ -235,13 +235,7 @@ class SessionTest extends UnitTestCase
      */
     public function resumeSetsSessionCookieInTheResponse()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $sessionIdentifier = $session->getId();
@@ -261,12 +255,7 @@ class SessionTest extends UnitTestCase
      */
     public function resumeOnAStartedSessionDoesNotDoAnyHarm()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
 
@@ -280,12 +269,7 @@ class SessionTest extends UnitTestCase
      */
     public function startPutsACookieIntoTheHttpResponse()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
 
@@ -300,15 +284,12 @@ class SessionTest extends UnitTestCase
      */
     public function startThrowsAnExceptionIfIncompatibleRequestHandlerIsUsed()
     {
+        $mockRequestHandler = $this->createMock(RequestHandlerInterface::class);
         $mockBootstrap = $this->createMock(Bootstrap::class);
-        $mockBootstrap->expects($this->any())->method('getActiveRequestHandler')->will($this->returnValue(new \stdClass()));
+        $mockBootstrap->expects($this->any())->method('getActiveRequestHandler')->willReturn($mockRequestHandler);
 
-        $session = new Session();
+        $session = $this->createSession();
         $this->inject($session, 'bootstrap', $mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
 
         $session->start();
     }
@@ -318,12 +299,7 @@ class SessionTest extends UnitTestCase
      */
     public function getIdReturnsTheCurrentSessionIdentifier()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         try {
             $session->getId();
@@ -339,12 +315,8 @@ class SessionTest extends UnitTestCase
      */
     public function renewIdSetsANewSessionIdentifier()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
+
         $session->start();
 
         $oldSessionId = $session->getId();
@@ -359,12 +331,8 @@ class SessionTest extends UnitTestCase
      */
     public function renewIdThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
+
         $session->renewId();
     }
 
@@ -375,12 +343,8 @@ class SessionTest extends UnitTestCase
     public function renewIdThrowsExceptionIfCalledOnRemoteSession()
     {
         $storageIdentifier = '6e988eaa-7010-4ee8-bfb8-96ea4b40ec16';
-        $session = new Session('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
+
         $session->renewId();
     }
 
@@ -389,16 +353,7 @@ class SessionTest extends UnitTestCase
      */
     public function sessionDataCanBeRetrievedEvenAfterSessionIdHasBeenRenewed()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $session->putData('foo', 'bar');
@@ -408,13 +363,7 @@ class SessionTest extends UnitTestCase
         $sessionCookie = $this->httpResponse->getCookie($this->settings['session']['name']);
         $this->httpRequest->setCookie($sessionCookie);
 
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->resume();
 
@@ -431,16 +380,7 @@ class SessionTest extends UnitTestCase
      */
     public function sessionOnlyReusesTheSessionIdFromIncomingCookies()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $session->putData('foo', 'bar');
@@ -450,13 +390,7 @@ class SessionTest extends UnitTestCase
         $requestCookie = new Http\Cookie($this->settings['session']['name'], $sessionIdentifier, 0, 100, 'other', '/');
         $this->httpRequest->setCookie($requestCookie);
 
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->resume();
 
@@ -472,7 +406,7 @@ class SessionTest extends UnitTestCase
      */
     public function getDataThrowsExceptionIfSessionIsNotStarted()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->getData('some key');
     }
 
@@ -482,7 +416,7 @@ class SessionTest extends UnitTestCase
      */
     public function putDataThrowsExceptionIfSessionIsNotStarted()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->putData('some key', 'some value');
     }
 
@@ -492,12 +426,7 @@ class SessionTest extends UnitTestCase
      */
     public function putDataThrowsExceptionIfTryingToPersistAResource()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $resource = fopen(__FILE__, 'r');
@@ -509,12 +438,7 @@ class SessionTest extends UnitTestCase
      */
     public function getDataReturnsDataPreviouslySetWithPutData()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
 
@@ -530,7 +454,7 @@ class SessionTest extends UnitTestCase
      */
     public function hasKeyThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->hasKey('foo');
     }
 
@@ -539,23 +463,10 @@ class SessionTest extends UnitTestCase
      */
     public function twoSessionsDontConflictIfUsingSameEntryIdentifiers()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session1 = new Session();
-        $this->inject($session1, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session1, 'settings', $this->settings);
-        $this->inject($session1, 'metaDataCache', $metaDataCache);
-        $this->inject($session1, 'storageCache', $storageCache);
-        $session1->initializeObject();
+        $session1 = $this->createSession();
         $session1->start();
 
-        $session2 = new Session();
-        $this->inject($session2, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session2, 'settings', $this->settings);
-        $this->inject($session2, 'metaDataCache', $metaDataCache);
-        $this->inject($session2, 'storageCache', $storageCache);
-        $session2->initializeObject();
+        $session2 = $this->createSession();
         $session2->start();
 
         $session1->putData('foo', 'bar');
@@ -571,7 +482,7 @@ class SessionTest extends UnitTestCase
      */
     public function getLastActivityTimestampThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->getLastActivityTimestamp();
     }
 
@@ -580,16 +491,13 @@ class SessionTest extends UnitTestCase
      */
     public function lastActivityTimestampOfNewSessionIsSetAndStoredCorrectlyAndCanBeRetrieved()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
         /** @var Session $session */
         $session = $this->getAccessibleMock(Session::class, array('dummy'));
         $this->inject($session, 'bootstrap', $this->mockBootstrap);
         $this->inject($session, 'objectManager', $this->mockObjectManager);
         $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
+        $this->inject($session, 'metaDataCache', $this->metaDataCache);
+        $this->inject($session, 'storageCache', $this->storageCache);
         $session->initializeObject();
 
         $now = $session->_get('now');
@@ -600,7 +508,7 @@ class SessionTest extends UnitTestCase
 
         $session->close();
 
-        $sessionInfo = $metaDataCache->get($sessionIdentifier);
+        $sessionInfo = $this->metaDataCache->get($sessionIdentifier);
         $this->assertEquals($now, $sessionInfo['lastActivityTimestamp']);
     }
 
@@ -610,7 +518,7 @@ class SessionTest extends UnitTestCase
      */
     public function addTagThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->addTag('MyTag');
     }
 
@@ -620,13 +528,7 @@ class SessionTest extends UnitTestCase
      */
     public function addTagThrowsExceptionIfTagIsNotValid()
     {
-        $taggedSession = new Session();
-        $this->inject($taggedSession, 'bootstrap', $this->mockBootstrap);
-        $this->inject($taggedSession, 'settings', $this->settings);
-        $this->inject($taggedSession, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($taggedSession, 'storageCache', $this->createCache('Storage'));
-        $this->inject($taggedSession, 'objectManager', $this->mockObjectManager);
-        $taggedSession->initializeObject();
+        $taggedSession = $this->createSession();
         $taggedSession->start();
 
         $taggedSession->addTag('Invalid Tag Contains Spaces');
@@ -637,26 +539,12 @@ class SessionTest extends UnitTestCase
      */
     public function aSessionCanBeTaggedAndBeRetrievedAgainByTheseTags()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $otherSession = new Session();
-        $this->inject($otherSession, 'bootstrap', $this->mockBootstrap);
-        $this->inject($otherSession, 'settings', $this->settings);
-        $this->inject($otherSession, 'metaDataCache', $metaDataCache);
-        $this->inject($otherSession, 'storageCache', $storageCache);
-        $this->inject($otherSession, 'objectManager', $this->mockObjectManager);
-        $otherSession->initializeObject();
+        $otherSession = $this->createSession();
         $otherSession->start();
 
-        $taggedSession = new Session();
-        $this->inject($taggedSession, 'bootstrap', $this->mockBootstrap);
-        $this->inject($taggedSession, 'settings', $this->settings);
-        $this->inject($taggedSession, 'metaDataCache', $metaDataCache);
-        $this->inject($taggedSession, 'storageCache', $storageCache);
-        $this->inject($taggedSession, 'objectManager', $this->mockObjectManager);
-        $taggedSession->initializeObject();
+        $taggedSession = $this->createSession();
         $taggedSession->start();
+
         $taggedSessionId = $taggedSession->getId();
 
         $otherSession->putData('foo', 'bar');
@@ -669,7 +557,7 @@ class SessionTest extends UnitTestCase
         $taggedSession->close();
 
         $sessionManager = new SessionManager();
-        $this->inject($sessionManager, 'metaDataCache', $metaDataCache);
+        $this->inject($sessionManager, 'metaDataCache', $this->metaDataCache);
 
         $retrievedSessions = $sessionManager->getSessionsByTag('SampleTag');
         $this->assertSame($taggedSessionId, $retrievedSessions[0]->getId());
@@ -681,19 +569,10 @@ class SessionTest extends UnitTestCase
      */
     public function getActiveSessionsReturnsAllActiveSessions()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
         $sessions = [];
         $sessionIDs = [];
         for ($i = 0; $i < 5; $i++) {
-            $session = new Session();
-            $this->inject($session, 'bootstrap', $this->mockBootstrap);
-            $this->inject($session, 'settings', $this->settings);
-            $this->inject($session, 'metaDataCache', $metaDataCache);
-            $this->inject($session, 'storageCache', $storageCache);
-            $this->inject($session, 'objectManager', $this->mockObjectManager);
-            $session->initializeObject();
+            $session = $this->createSession();
             $session->start();
             $sessions[] = $session;
             $sessionIDs[] = $session->getId();
@@ -701,7 +580,7 @@ class SessionTest extends UnitTestCase
         }
 
         $sessionManager = new SessionManager();
-        $this->inject($sessionManager, 'metaDataCache', $metaDataCache);
+        $this->inject($sessionManager, 'metaDataCache', $this->metaDataCache);
 
         $activeSessions = $sessionManager->getActiveSessions();
 
@@ -719,16 +598,7 @@ class SessionTest extends UnitTestCase
      */
     public function getTagsOnAResumedSessionReturnsTheTagsSetWithAddTag()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $session->addTag('SampleTag');
@@ -741,13 +611,7 @@ class SessionTest extends UnitTestCase
         $sessionCookie = $this->httpResponse->getCookie($this->settings['session']['name']);
         $this->httpRequest->setCookie($sessionCookie);
 
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
         $this->assertNotNull($session->resume(), 'The session was not properly resumed.');
 
         $this->assertEquals(['SampleTag', 'AnotherTag'], $session->getTags());
@@ -759,7 +623,7 @@ class SessionTest extends UnitTestCase
      */
     public function getTagsThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->getTags();
     }
 
@@ -769,7 +633,7 @@ class SessionTest extends UnitTestCase
      */
     public function removeTagThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->removeTag('MyTag');
     }
 
@@ -778,13 +642,7 @@ class SessionTest extends UnitTestCase
      */
     public function removeTagRemovesAPreviouslySetTag()
     {
-        $taggedSession = new Session();
-        $this->inject($taggedSession, 'bootstrap', $this->mockBootstrap);
-        $this->inject($taggedSession, 'settings', $this->settings);
-        $this->inject($taggedSession, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($taggedSession, 'storageCache', $this->createCache('Storage'));
-        $this->inject($taggedSession, 'objectManager', $this->mockObjectManager);
-        $taggedSession->initializeObject();
+        $taggedSession = $this->createSession();
         $taggedSession->start();
 
         $taggedSession->addTag('SampleTag');
@@ -804,7 +662,7 @@ class SessionTest extends UnitTestCase
      */
     public function touchThrowsExceptionIfCalledOnNonStartedSession()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->touch();
     }
 
@@ -814,21 +672,13 @@ class SessionTest extends UnitTestCase
     public function touchUpdatesLastActivityTimestampOfRemoteSession()
     {
         $storageIdentifier = '6e988eaa-7010-4ee8-bfb8-96ea4b40ec16';
-        $metaDataCache = $this->createCache('Meta');
-
-        $session = new Session('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1110000000);
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1110000000);
 
         $this->inject($session, 'now', 2220000000);
 
         $session->touch();
 
-        $sessionInfo = $metaDataCache->get('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb');
+        $sessionInfo = $this->metaDataCache->get('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb');
         $this->assertEquals(2220000000, $sessionInfo['lastActivityTimestamp']);
         $this->assertEquals($storageIdentifier, $sessionInfo['storageIdentifier']);
     }
@@ -838,13 +688,7 @@ class SessionTest extends UnitTestCase
      */
     public function closeFlagsTheSessionAsClosed()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $this->assertTrue($session->isStarted());
@@ -859,13 +703,7 @@ class SessionTest extends UnitTestCase
     public function closeAndShutdownObjectDoNotCloseARemoteSession()
     {
         $storageIdentifier = '6e988eaa-7010-4ee8-bfb8-96ea4b40ec16';
-        $session = new Session('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
 
         $session->start();
         $this->assertTrue($session->isStarted());
@@ -879,13 +717,7 @@ class SessionTest extends UnitTestCase
      */
     public function shutdownCreatesSpecialDataEntryForSessionWithAuthenticatedAccounts()
     {
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
 
@@ -897,8 +729,8 @@ class SessionTest extends UnitTestCase
         $token->setAuthenticationStatus(TokenInterface::AUTHENTICATION_SUCCESSFUL);
         $token->setAccount($account);
 
-        $this->mockSecurityContext->expects($this->any())->method('isInitialized')->will($this->returnValue(true));
-        $this->mockSecurityContext->expects($this->any())->method('getAuthenticationTokens')->will($this->returnValue([$token]));
+        $this->mockSecurityContext->expects($this->any())->method('isInitialized')->willReturn(true);
+        $this->mockSecurityContext->expects($this->any())->method('getAuthenticationTokens')->willReturn([$token]);
 
         $session->close();
 
@@ -913,16 +745,7 @@ class SessionTest extends UnitTestCase
      */
     public function shutdownChecksIfSessionStillExistsInStorageCacheBeforeWritingData()
     {
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         // Start a "local" session and store some data:
         $session->start();
@@ -930,19 +753,13 @@ class SessionTest extends UnitTestCase
 
         $session->putData('foo', 'bar');
         $session->close();
-        $sessionInfo = $metaDataCache->get($sessionIdentifier);
+        $sessionInfo = $this->metaDataCache->get($sessionIdentifier);
 
         // Simulate a remote server referring to the same session:
-        $remoteSession = new Session($sessionIdentifier, $sessionInfo['storageIdentifier'], $sessionInfo['lastActivityTimestamp']);
-        $this->inject($remoteSession, 'bootstrap', $this->mockBootstrap);
-        $this->inject($remoteSession, 'objectManager', $this->mockObjectManager);
-        $this->inject($remoteSession, 'settings', $this->settings);
-        $this->inject($remoteSession, 'metaDataCache', $metaDataCache);
-        $this->inject($remoteSession, 'storageCache', $storageCache);
-        $remoteSession->initializeObject();
+        $remoteSession = $this->createSession($sessionIdentifier, $sessionInfo['storageIdentifier'], $sessionInfo['lastActivityTimestamp']);
 
         // Resume the local session and add more data:
-        $this->assertTrue($metaDataCache->has($sessionIdentifier));
+        $this->assertTrue($this->metaDataCache->has($sessionIdentifier));
         $session->resume();
         $session->putData('baz', 'quux');
 
@@ -952,7 +769,7 @@ class SessionTest extends UnitTestCase
         // Close the local session – this must not write any data because the session doesn't exist anymore:
         $session->close();
 
-        $this->assertFalse($metaDataCache->has($sessionIdentifier));
+        $this->assertFalse($this->metaDataCache->has($sessionIdentifier));
     }
 
     /**
@@ -961,7 +778,7 @@ class SessionTest extends UnitTestCase
      */
     public function destroyThrowsExceptionIfSessionIsNotStarted()
     {
-        $session = new Session();
+        $session = $this->createSession();
         $session->destroy();
     }
 
@@ -970,22 +787,8 @@ class SessionTest extends UnitTestCase
      */
     public function destroyRemovesAllSessionDataFromTheCurrentSessionButNotFromOtherSessions()
     {
-        $session1 = new Session();
-        $session2 = new Session();
-
-        $this->inject($session1, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session2, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session1, 'settings', $this->settings);
-        $this->inject($session2, 'settings', $this->settings);
-
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-        $this->inject($session1, 'metaDataCache', $metaDataCache);
-        $this->inject($session1, 'storageCache', $storageCache);
-        $this->inject($session2, 'metaDataCache', $metaDataCache);
-        $this->inject($session2, 'storageCache', $storageCache);
-        $session1->initializeObject();
-        $session2->initializeObject();
+        $session1 = $this->createSession();
+        $session2 = $this->createSession();
 
         $session1->start();
         $session2->start();
@@ -1010,12 +813,7 @@ class SessionTest extends UnitTestCase
     {
         $storageIdentifier = '6e988eaa-7010-4ee8-bfb8-96ea4b40ec16';
 
-        $session = new Session('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'settings', $this->settings);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->initializeObject();
+        $session = $this->createSession('ZPjPj3A0Opd7JeDoe7rzUQYCoDMcxscb', $storageIdentifier, 1354293259, []);
 
         $session->start();
 
@@ -1039,12 +837,8 @@ class SessionTest extends UnitTestCase
         $this->inject($session, 'bootstrap', $this->mockBootstrap);
         $this->inject($session, 'objectManager', $this->mockObjectManager);
         $this->inject($session, 'settings', $this->settings);
-
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-
+        $this->inject($session, 'metaDataCache', $this->metaDataCache);
+        $this->inject($session, 'storageCache', $this->storageCache);
         $session->initializeObject();
 
         $session->start();
@@ -1054,20 +848,20 @@ class SessionTest extends UnitTestCase
         $session->putData('session 1 key 1', 'some value');
         $session->putData('session 1 key 2', 'some other value');
 
-        $this->assertTrue($storageCache->has($storageIdentifier . md5('session 1 key 1')));
-        $this->assertTrue($storageCache->has($storageIdentifier . md5('session 1 key 2')));
+        $this->assertTrue($this->storageCache->has($storageIdentifier . md5('session 1 key 1')));
+        $this->assertTrue($this->storageCache->has($storageIdentifier . md5('session 1 key 2')));
 
         $session->close();
 
-        $sessionInfo = $metaDataCache->get($sessionIdentifier);
+        $sessionInfo = $this->metaDataCache->get($sessionIdentifier);
         $sessionInfo['lastActivityTimestamp'] = time() - 4000;
-        $metaDataCache->set($sessionIdentifier, $sessionInfo, [$storageIdentifier, 'session'], 0);
+        $this->metaDataCache->set($sessionIdentifier, $sessionInfo, [$storageIdentifier, 'session'], 0);
 
         // canBeResumed implicitly calls autoExpire():
         $this->assertFalse($session->canBeResumed(), 'canBeResumed');
 
-        $this->assertFalse($storageCache->has($storageIdentifier . md5('session 1 key 1')));
-        $this->assertFalse($storageCache->has($storageIdentifier . md5('session 1 key 2')));
+        $this->assertFalse($this->storageCache->has($storageIdentifier . md5('session 1 key 1')));
+        $this->assertFalse($this->storageCache->has($storageIdentifier . md5('session 1 key 2')));
     }
 
     /**
@@ -1079,18 +873,9 @@ class SessionTest extends UnitTestCase
         $settings['session']['inactivityTimeout'] = 5000;
         $settings['session']['garbageCollection']['probability'] = 100;
 
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
         // Create a session which first runs fine and then expires by later modifying
         // the inactivity timeout:
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'metaDataCache', $this->createCache('Meta'));
-        $this->inject($session, 'storageCache', $this->createCache('Storage'));
-        $session->injectSettings($settings);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $session->start();
         $sessionIdentifier1 = $session->getId();
@@ -1100,12 +885,12 @@ class SessionTest extends UnitTestCase
 
         $session->resume();
         $this->assertTrue($session->isStarted());
-        $this->assertTrue($metaDataCache->has($sessionIdentifier1), 'session 1 meta entry doesnt exist');
+        $this->assertTrue($this->metaDataCache->has($sessionIdentifier1), 'session 1 meta entry doesnt exist');
         $session->close();
 
-        $sessionInfo1 = $metaDataCache->get($sessionIdentifier1);
+        $sessionInfo1 = $this->metaDataCache->get($sessionIdentifier1);
         $sessionInfo1['lastActivityTimestamp'] = time() - 4000;
-        $metaDataCache->set($sessionIdentifier1, $sessionInfo1, ['session'], 0);
+        $this->metaDataCache->set($sessionIdentifier1, $sessionInfo1, ['session'], 0);
 
         // Because we change the timeout post factum, the previously valid session
         // now expires:
@@ -1131,14 +916,14 @@ class SessionTest extends UnitTestCase
         // Calls autoExpire() internally:
         $session->resume();
 
-        $sessionInfo2 = $metaDataCache->get($sessionIdentifier2);
+        $sessionInfo2 = $this->metaDataCache->get($sessionIdentifier2);
 
         // Check how the cache looks like - data of session 1 should be gone:
-        $this->assertFalse($metaDataCache->has($sessionIdentifier1), 'session 1 meta entry still there');
-        $this->assertFalse($storageCache->has($sessionInfo1['storageIdentifier'] . md5('session 1 key 1')), 'session 1 key 1 still there');
-        $this->assertFalse($storageCache->has($sessionInfo1['storageIdentifier'] . md5('session 1 key 2')), 'session 1 key 2 still there');
-        $this->assertTrue($storageCache->has($sessionInfo2['storageIdentifier'] . md5('session 2 key 1')), 'session 2 key 1 not there');
-        $this->assertTrue($storageCache->has($sessionInfo2['storageIdentifier'] . md5('session 2 key 2')), 'session 2 key 2 not there');
+        $this->assertFalse($this->metaDataCache->has($sessionIdentifier1), 'session 1 meta entry still there');
+        $this->assertFalse($this->storageCache->has($sessionInfo1['storageIdentifier'] . md5('session 1 key 1')), 'session 1 key 1 still there');
+        $this->assertFalse($this->storageCache->has($sessionInfo1['storageIdentifier'] . md5('session 1 key 2')), 'session 1 key 2 still there');
+        $this->assertTrue($this->storageCache->has($sessionInfo2['storageIdentifier'] . md5('session 2 key 1')), 'session 2 key 1 not there');
+        $this->assertTrue($this->storageCache->has($sessionInfo2['storageIdentifier'] . md5('session 2 key 2')), 'session 2 key 2 not there');
     }
 
     /**
@@ -1149,16 +934,7 @@ class SessionTest extends UnitTestCase
         $settings = $this->settings;
         $settings['session']['inactivityTimeout'] = 0;
 
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->injectSettings($settings);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         $this->assertSame(0, $session->collectGarbage());
     }
@@ -1172,21 +948,12 @@ class SessionTest extends UnitTestCase
         $settings['session']['inactivityTimeout'] = 5000;
         $settings['session']['garbageCollection']['probability'] = 100;
 
-        $metaDataCache = $this->createCache('Meta');
-        $storageCache = $this->createCache('Storage');
-
-        $session = new Session();
-        $this->inject($session, 'bootstrap', $this->mockBootstrap);
-        $this->inject($session, 'objectManager', $this->mockObjectManager);
-        $this->inject($session, 'metaDataCache', $metaDataCache);
-        $this->inject($session, 'storageCache', $storageCache);
-        $session->injectSettings($settings);
-        $session->initializeObject();
+        $session = $this->createSession();
 
         // No sessions need to be removed:
         $this->assertSame(0, $session->collectGarbage());
 
-        $metaDataCache->set('_garbage-collection-running', true, [], 120);
+        $this->metaDataCache->set('_garbage-collection-running', true, [], 120);
 
         // Session garbage collection is omitted:
         $this->assertFalse($session->collectGarbage());
