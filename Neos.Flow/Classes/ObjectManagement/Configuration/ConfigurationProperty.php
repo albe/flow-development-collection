@@ -67,7 +67,7 @@ class ConfigurationProperty
      * @param Configuration $objectConfiguration If $type is OBJECT, a custom object configuration may be specified
      * @param boolean $lazyLoading
      */
-    public function __construct($name, $value, $type = self::PROPERTY_TYPES_STRAIGHTVALUE, $objectConfiguration = null, $lazyLoading = true)
+    public function __construct(string $name, $value, int $type = self::PROPERTY_TYPES_STRAIGHTVALUE, Configuration $objectConfiguration = null, bool $lazyLoading = true)
     {
         $this->set($name, $value, $type, $objectConfiguration, $lazyLoading);
     }
@@ -78,11 +78,11 @@ class ConfigurationProperty
      * @param string $name Name of the property
      * @param mixed $value Value of the property
      * @param integer $type Type of the property - one of the PROPERTY_TYPE_* constants
-     * @param Configuration $objectConfiguration If $type is OBJECT, a custom object configuration may be specified
+     * @param Configuration|null $objectConfiguration If $type is OBJECT, a custom object configuration may be specified
      * @param boolean $lazyLoading
      * @return void
      */
-    public function set($name, $value, $type = self::PROPERTY_TYPES_STRAIGHTVALUE, $objectConfiguration = null, $lazyLoading = true)
+    public function set(string $name, $value, int $type = self::PROPERTY_TYPES_STRAIGHTVALUE, Configuration $objectConfiguration = null, bool $lazyLoading = true)
     {
         $this->name = $name;
         $this->value = $value;
@@ -96,7 +96,7 @@ class ConfigurationProperty
      *
      * @return string Name of the property
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -116,7 +116,7 @@ class ConfigurationProperty
      *
      * @return integer Type of the property
      */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }
@@ -124,7 +124,7 @@ class ConfigurationProperty
     /**
      * Returns the (optional) object configuration which may be defined for properties of type OBJECT
      *
-     * @return Configuration The object configuration or NULL
+     * @return Configuration|null The object configuration or NULL
      */
     public function getObjectConfiguration()
     {
@@ -137,7 +137,7 @@ class ConfigurationProperty
      * @param integer $autowiring One of the Configuration::AUTOWIRING_MODE_* constants
      * @return void
      */
-    public function setAutowiring($autowiring)
+    public function setAutowiring(int $autowiring)
     {
         $this->autowiring = $autowiring;
     }
@@ -147,7 +147,7 @@ class ConfigurationProperty
      *
      * @return integer Value of one of the Configuration::AUTOWIRING_MODE_* constants
      */
-    public function getAutowiring()
+    public function getAutowiring(): int
     {
         return $this->autowiring;
     }
@@ -157,7 +157,7 @@ class ConfigurationProperty
      *
      * @return boolean
      */
-    public function isLazyLoading()
+    public function isLazyLoading(): bool
     {
         return $this->lazyLoading;
     }

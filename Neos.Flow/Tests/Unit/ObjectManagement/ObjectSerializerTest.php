@@ -83,7 +83,7 @@ class ObjectSerializerTest extends UnitTestCase
         $objectSerializer = $this->getMockBuilder(ObjectSerializer::class)->disableOriginalConstructor()->setMethods(['buildStorageArrayForArrayProperty'])->getMock();
         $objectSerializer->injectReflectionService($mockReflectionService);
 
-        $objectSerializer->expects($this->once())->method('buildStorageArrayForArrayProperty')->with([1, 2, 3])->will($this->returnValue('storable array'));
+        $objectSerializer->expects($this->once())->method('buildStorageArrayForArrayProperty')->with([1, 2, 3])->will($this->returnValue(['storable array']));
 
         $someObject = new $className();
         $expectedPropertyArray = [
@@ -92,7 +92,7 @@ class ObjectSerializerTest extends UnitTestCase
                 ObjectSerializer::PROPERTIES => [
                     'arrayProperty' => [
                         ObjectSerializer::TYPE => 'array',
-                        ObjectSerializer::VALUE => 'storable array',
+                        ObjectSerializer::VALUE => ['storable array'],
                     ]
                 ]
             ]
@@ -121,7 +121,7 @@ class ObjectSerializerTest extends UnitTestCase
         $objectSerializer = $this->getMockBuilder(ObjectSerializer::class)->disableOriginalConstructor()->setMethods(['buildStorageArrayForArrayProperty'])->getMock();
         $objectSerializer->injectReflectionService($mockReflectionService);
 
-        $objectSerializer->expects($this->once())->method('buildStorageArrayForArrayProperty')->with([1, 2, 3])->will($this->returnValue('storable array'));
+        $objectSerializer->expects($this->once())->method('buildStorageArrayForArrayProperty')->with([1, 2, 3])->will($this->returnValue(['storable array']));
 
         $someObject = new $className();
         $expectedPropertyArray = [
@@ -130,7 +130,7 @@ class ObjectSerializerTest extends UnitTestCase
                 ObjectSerializer::PROPERTIES => [
                     'arrayObjectProperty' => [
                         ObjectSerializer::TYPE => 'ArrayObject',
-                        ObjectSerializer::VALUE => 'storable array',
+                        ObjectSerializer::VALUE => ['storable array'],
                     ]
                 ]
             ]
@@ -748,11 +748,11 @@ class ObjectSerializerTest extends UnitTestCase
                 ],
                 'arrayProperty' => [
                     ObjectSerializer::TYPE => 'array',
-                    ObjectSerializer::VALUE => 'arrayPropertyValue',
+                    ObjectSerializer::VALUE => ['arrayPropertyValue'],
                 ],
                 'arrayObjectProperty' => [
                     ObjectSerializer::TYPE => 'ArrayObject',
-                    ObjectSerializer::VALUE => 'arrayObjectPropertyValue',
+                    ObjectSerializer::VALUE => ['arrayObjectPropertyValue'],
                 ],
                 'objectProperty' => [
                     ObjectSerializer::TYPE => 'object',
@@ -777,12 +777,14 @@ class ObjectSerializerTest extends UnitTestCase
         $mockObjectManager = $this->getMockBuilder(ObjectManager::class)->disableOriginalConstructor()->getMock();
         $mockObjectManager->expects($this->any())->method('getClassNameByObjectName')->will($this->returnArgument(0));
 
+        $mockArrayCollection = $this->createMock('Doctrine\Common\Collections\ArrayCollection');
+
         $objectSerializer = $this->getAccessibleMock(ObjectSerializer::class, ['reconstituteArray', 'reconstituteSplObjectStorage', 'reconstituteCollection', 'reconstitutePersistenceObject'], [], '', false);
         $objectSerializer->injectObjectManager($mockObjectManager);
-        $objectSerializer->expects($this->at(0))->method('reconstituteArray')->with('arrayPropertyValue')->will($this->returnValue('arrayPropertyValue'));
-        $objectSerializer->expects($this->at(1))->method('reconstituteArray')->with('arrayObjectPropertyValue')->will($this->returnValue(['arrayObjectPropertyValue']));
-        $objectSerializer->expects($this->once())->method('reconstituteSplObjectStorage')->with(['splObjectStoragePropertyValue'])->will($this->returnValue('splObjectStoragePropertyValue'));
-        $objectSerializer->expects($this->once())->method('reconstituteCollection')->with('Doctrine\Common\Collections\ArrayCollection', ['collectionPropertyValue'])->will($this->returnValue('collectionPropertyValue'));
+        $objectSerializer->expects($this->at(0))->method('reconstituteArray')->with(['arrayPropertyValue'])->will($this->returnValue(['arrayPropertyValue']));
+        $objectSerializer->expects($this->at(1))->method('reconstituteArray')->with(['arrayObjectPropertyValue'])->will($this->returnValue(['arrayObjectPropertyValue']));
+        $objectSerializer->expects($this->once())->method('reconstituteSplObjectStorage')->with(['splObjectStoragePropertyValue'])->will($this->returnValue(new \SplObjectStorage()));
+        $objectSerializer->expects($this->once())->method('reconstituteCollection')->with('Doctrine\Common\Collections\ArrayCollection', ['collectionPropertyValue'])->will($this->returnValue($mockArrayCollection));
         $objectSerializer->expects($this->once())->method('reconstitutePersistenceObject')->with('persistenceObjectClassName', 'persistenceObjectUUID')->will($this->returnValue('persistenceObjectPropertyValue'));
 
         $objectsAsArray = [
@@ -796,11 +798,11 @@ class ObjectSerializerTest extends UnitTestCase
         $object = $objectSerializer->_call('reconstituteObject', 'dummyobjecthash', $objectData);
 
         $this->assertEquals('simplePropertyValue', $object->getSimpleProperty(), 'Simple property was not set as expected.');
-        $this->assertEquals('arrayPropertyValue', $object->getArrayProperty(), 'Array property was not set as expected.');
+        $this->assertEquals(['arrayPropertyValue'], $object->getArrayProperty(), 'Array property was not set as expected.');
         $this->assertEquals(new \ArrayObject(['arrayObjectPropertyValue']), $object->getArrayObjectProperty(), 'ArrayObject property was not set as expected.');
         $this->assertEquals(new $emptyClassName(), $object->getObjectProperty(), 'Object property was not set as expected.');
-        $this->assertEquals('splObjectStoragePropertyValue', $object->getSplObjectStorageProperty(), 'SplObjectStorage property was not set as expected.');
-        $this->assertEquals('collectionPropertyValue', $object->getCollectionProperty(), 'Collection property was not set as expected.');
+        $this->assertEquals(new \SplObjectStorage(), $object->getSplObjectStorageProperty(), 'SplObjectStorage property was not set as expected.');
+        $this->assertEquals($mockArrayCollection, $object->getCollectionProperty(), 'Collection property was not set as expected.');
         $this->assertEquals('persistenceObjectPropertyValue', $object->getPersistenceObjectProperty(), 'Persistence object property was not set as expected.');
     }
 
@@ -896,7 +898,7 @@ class ObjectSerializerTest extends UnitTestCase
         ];
 
         $objectSerializer = $this->getAccessibleMock(ObjectSerializer::class, ['reconstituteSplObjectStorage'], [], '', false);
-        $objectSerializer->expects($this->once())->method('reconstituteSplObjectStorage')->with([ObjectSerializer::CLASSNAME => 'some object', ObjectSerializer::PROPERTIES => ObjectSerializer::PROPERTIES,])->will($this->returnValue('reconstituted object'));
+        $objectSerializer->expects($this->once())->method('reconstituteSplObjectStorage')->with([ObjectSerializer::CLASSNAME => 'some object', ObjectSerializer::PROPERTIES => ObjectSerializer::PROPERTIES,])->willReturn(new \SplObjectStorage());
         $objectSerializer->_set('objectsAsArray', $objectsAsArray);
 
 
@@ -913,7 +915,7 @@ class ObjectSerializerTest extends UnitTestCase
 
         $expectedArrayProperty = [
             'key1' => 1,
-            'key2' => 'reconstituted object',
+            'key2' => new \SplObjectStorage(),
         ];
 
         $this->assertEquals($expectedArrayProperty, $objectSerializer->_call('reconstituteArray', $dataArray), 'The array was not reconstituted correctly.');
@@ -1104,8 +1106,9 @@ class ObjectSerializerTest extends UnitTestCase
             ]
         ];
 
+        $mockArrayCollection = $this->createMock('Doctrine\Common\Collections\ArrayCollection');
         $objectSerializer = $this->getAccessibleMock(ObjectSerializer::class, ['reconstituteCollection'], [], '', false);
-        $objectSerializer->expects($this->once())->method('reconstituteCollection')->with('Doctrine\Common\Collections\ArrayCollection', ['some object'])->will($this->returnValue('reconstituted object'));
+        $objectSerializer->expects($this->once())->method('reconstituteCollection')->with('Doctrine\Common\Collections\ArrayCollection', ['some object'])->willReturn($mockArrayCollection);
         $objectSerializer->_set('objectsAsArray', $objectsAsArray);
 
 
@@ -1123,7 +1126,7 @@ class ObjectSerializerTest extends UnitTestCase
 
         $expectedArrayProperty = [
             'key1' => 1,
-            'key2' => 'reconstituted object'
+            'key2' => $mockArrayCollection
         ];
 
         $this->assertEquals($expectedArrayProperty, $objectSerializer->_call('reconstituteArray', $dataArray), 'The array was not reconstituted correctly.');

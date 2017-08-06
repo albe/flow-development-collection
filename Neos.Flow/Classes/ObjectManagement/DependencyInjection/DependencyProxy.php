@@ -42,7 +42,7 @@ class DependencyProxy
      * @param string $className Implementation class name of the dependency to proxy
      * @param \Closure $builder The closure which eventually builds the dependency
      */
-    public function __construct($className, \Closure $builder)
+    public function __construct(string $className, \Closure $builder)
     {
         $this->className = $className;
         $this->builder = $builder;
@@ -69,7 +69,7 @@ class DependencyProxy
      * @return string Fully qualified class name of the proxied object
      * @api
      */
-    public function _getClassName()
+    public function _getClassName(): string
     {
         return $this->className;
     }
@@ -94,7 +94,7 @@ class DependencyProxy
      * @param array $arguments An array of arguments to be passed to the method
      * @return mixed
      */
-    public function __call($methodName, array $arguments)
+    public function __call(string $methodName, array $arguments)
     {
         return call_user_func_array([$this->_activateDependency(), $methodName], $arguments);
     }

@@ -117,15 +117,6 @@ class ConfigurationTest extends UnitTestCase
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
-     */
-    public function setFactoryMethodNameRejectsAnythingElseThanAString()
-    {
-        $this->objectConfiguration->setFactoryMethodName([]);
-    }
-
-    /**
-     * @test
      */
     public function theDefaultFactoryMethodNameIsCreate()
     {

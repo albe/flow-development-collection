@@ -125,7 +125,7 @@ class ObjectManager implements ObjectManagerInterface
      *
      * @return ApplicationContext The context, for example "Development" or "Production"
      */
-    public function getContext()
+    public function getContext(): ApplicationContext
     {
         return $this->context;
     }
@@ -138,7 +138,7 @@ class ObjectManager implements ObjectManagerInterface
      * @throws \InvalidArgumentException
      * @api
      */
-    public function isRegistered($objectName)
+    public function isRegistered($objectName): bool
     {
         if (isset($this->objects[$objectName])) {
             return true;
@@ -217,7 +217,7 @@ class ObjectManager implements ObjectManagerInterface
      * @throws Exception\UnknownObjectException
      * @api
      */
-    public function getScope($objectName)
+    public function getScope($objectName): int
     {
         if (!isset($this->objects[$objectName])) {
             $hint = ($objectName[0] === '\\') ? ' Hint: You specified an object name with a leading backslash!' : '';
@@ -237,7 +237,7 @@ class ObjectManager implements ObjectManagerInterface
      * rare cases.
      *
      * @param  string $caseInsensitiveObjectName The object name in lower-, upper- or mixed case
-     * @return mixed Either the mixed case object name or FALSE if no object of that name was found.
+     * @return string|false Either the mixed case object name or FALSE if no object of that name was found.
      * @api
      */
     public function getCaseSensitiveObjectName($caseInsensitiveObjectName)
@@ -261,7 +261,7 @@ class ObjectManager implements ObjectManagerInterface
      * Returns the object name corresponding to a given class name.
      *
      * @param string $className The class name
-     * @return string The object name corresponding to the given class name or FALSE if no object is configured to use that class
+     * @return string|false The object name corresponding to the given class name or FALSE if no object is configured to use that class
      * @throws \InvalidArgumentException
      * @api
      */
@@ -287,7 +287,7 @@ class ObjectManager implements ObjectManagerInterface
      * Returns the implementation class name for the specified object
      *
      * @param string $objectName The object name
-     * @return string The class name corresponding to the given object name or FALSE if no such object is registered
+     * @return string|false The class name corresponding to the given object name or FALSE if no such object is registered
      * @api
      */
     public function getClassNameByObjectName($objectName)
@@ -295,7 +295,7 @@ class ObjectManager implements ObjectManagerInterface
         if (!isset($this->objects[$objectName])) {
             return (class_exists($objectName)) ? $objectName : false;
         }
-        return (isset($this->objects[$objectName]['c']) ? $this->objects[$objectName]['c'] : $objectName);
+        return $this->objects[$objectName]['c'] ?? $objectName;
     }
 
     /**
@@ -305,9 +305,9 @@ class ObjectManager implements ObjectManagerInterface
      * @return string The package key or FALSE if no such object exists
      * @api
      */
-    public function getPackageKeyByObjectName($objectName)
+    public function getPackageKeyByObjectName($objectName): string
     {
-        return (isset($this->objects[$objectName]) ? $this->objects[$objectName]['p'] : false);
+        return $this->objects[$objectName]['p'] ?? false;
     }
 
     /**
@@ -344,7 +344,7 @@ class ObjectManager implements ObjectManagerInterface
      * @param string $objectName The object name
      * @return boolean TRUE if an instance already exists
      */
-    public function hasInstance($objectName)
+    public function hasInstance($objectName): bool
     {
         return isset($this->objects[$objectName]['i']);
     }
@@ -358,7 +358,7 @@ class ObjectManager implements ObjectManagerInterface
      */
     public function getInstance($objectName)
     {
-        return isset($this->objects[$objectName]['i']) ? $this->objects[$objectName]['i'] : null;
+        return $this->objects[$objectName]['i'] ?? null;
     }
 
     /**
@@ -371,9 +371,9 @@ class ObjectManager implements ObjectManagerInterface
      *
      * @param string $hash
      * @param mixed &$propertyReferenceVariable Reference of the variable to inject into once the proxy is activated
-     * @return mixed
+     * @return DependencyProxy|null
      */
-    public function getLazyDependencyByHash($hash, &$propertyReferenceVariable)
+    public function getLazyDependencyByHash(string $hash, &$propertyReferenceVariable)
     {
         if (!isset($this->dependencyProxies[$hash])) {
             return null;
@@ -396,7 +396,7 @@ class ObjectManager implements ObjectManagerInterface
      * @param \Closure $builder An anonymous function which creates the instance to be injected
      * @return DependencyProxy
      */
-    public function createLazyDependency($hash, &$propertyReferenceVariable, $className, \Closure $builder)
+    public function createLazyDependency(string $hash, string &$propertyReferenceVariable, string $className, \Closure $builder): DependencyProxy
     {
         $this->dependencyProxies[$hash] = new DependencyProxy($className, $builder);
         $this->dependencyProxies[$hash]->_addPropertyVariable($propertyReferenceVariable);
@@ -424,7 +424,7 @@ class ObjectManager implements ObjectManagerInterface
      *
      * @return array
      */
-    public function getSessionInstances()
+    public function getSessionInstances(): array
     {
         $sessionObjects = [];
         foreach ($this->objects as $information) {
@@ -473,7 +473,7 @@ class ObjectManager implements ObjectManagerInterface
      *
      * @return array
      */
-    public function getAllObjectConfigurations()
+    public function getAllObjectConfigurations(): array
     {
         return $this->objects;
     }
@@ -486,7 +486,7 @@ class ObjectManager implements ObjectManagerInterface
      * @param string $objectName Name of the object to build
      * @return object The built object
      */
-    protected function buildObjectByFactory($objectName)
+    protected function buildObjectByFactory(string $objectName)
     {
         $factory = $this->get($this->objects[$objectName]['f'][0]);
         $factoryMethodName = $this->objects[$objectName]['f'][1];
@@ -509,9 +509,8 @@ class ObjectManager implements ObjectManagerInterface
 
         if (count($factoryMethodArguments) === 0) {
             return $factory->$factoryMethodName();
-        } else {
-            return call_user_func_array([$factory, $factoryMethodName], $factoryMethodArguments);
         }
+        return call_user_func_array([$factory, $factoryMethodName], $factoryMethodArguments);
     }
 
     /**
@@ -523,7 +522,7 @@ class ObjectManager implements ObjectManagerInterface
      * @throws Exception\CannotBuildObjectException
      * @throws \Exception
      */
-    protected function instantiateClass($className, array $arguments)
+    protected function instantiateClass(string $className, array $arguments)
     {
         if (isset($this->classesBeingInstantiated[$className])) {
             throw new Exception\CannotBuildObjectException('Circular dependency detected while trying to instantiate class "' . $className . '".', 1168505928);

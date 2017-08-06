@@ -106,7 +106,7 @@ class Configuration
      * @param string $objectName The unique identifier of the object
      * @param string $className Name of the class which provides the functionality of this object
      */
-    public function __construct($objectName, $className = null)
+    public function __construct(string $objectName, string $className = null)
     {
         $backtrace = debug_backtrace();
         if (isset($backtrace[1]['object'])) {
@@ -116,7 +116,7 @@ class Configuration
         }
 
         $this->objectName = $objectName;
-        $this->className = ($className === null ? $objectName : $className);
+        $this->className = $className ?? $objectName;
     }
 
     /**
@@ -125,7 +125,7 @@ class Configuration
      * @param string object name
      * @return void
      */
-    public function setObjectName($objectName)
+    public function setObjectName(string $objectName)
     {
         $this->objectName = $objectName;
         ;
@@ -136,7 +136,7 @@ class Configuration
      *
      * @return string object name
      */
-    public function getObjectName()
+    public function getObjectName(): string
     {
         return $this->objectName;
     }
@@ -157,7 +157,7 @@ class Configuration
      *
      * @return string Name of the implementing class of this object
      */
-    public function getClassName()
+    public function getClassName(): string
     {
         return $this->className;
     }
@@ -168,7 +168,7 @@ class Configuration
      * @param string $packageKey Key of the package this object is part of
      * @return void
      */
-    public function setPackageKey($packageKey)
+    public function setPackageKey(string $packageKey)
     {
         $this->packageKey = $packageKey;
     }
@@ -176,7 +176,7 @@ class Configuration
     /**
      * Returns the package key
      *
-     * @return string Key of the package this object is part of
+     * @return string|null Key of the package this object is part of
      */
     public function getPackageKey()
     {
@@ -189,7 +189,7 @@ class Configuration
      * @param string $objectName Valid object name of a factory
      * @return void
      */
-    public function setFactoryObjectName($objectName)
+    public function setFactoryObjectName(string $objectName)
     {
         $this->factoryObjectName = $objectName;
     }
@@ -199,7 +199,7 @@ class Configuration
      *
      * @return string The factory class name
      */
-    public function getFactoryObjectName()
+    public function getFactoryObjectName(): string
     {
         return $this->factoryObjectName;
     }
@@ -211,9 +211,9 @@ class Configuration
      * @return void
      * @throws \InvalidArgumentException
      */
-    public function setFactoryMethodName($methodName)
+    public function setFactoryMethodName(string $methodName)
     {
-        if (!is_string($methodName) || $methodName === '') {
+        if ($methodName === '') {
             throw new \InvalidArgumentException('No valid factory method name specified.', 1229700126);
         }
         $this->factoryMethodName = $methodName;
@@ -224,7 +224,7 @@ class Configuration
      *
      * @return string The factory method name
      */
-    public function getFactoryMethodName()
+    public function getFactoryMethodName(): string
     {
         return $this->factoryMethodName;
     }
@@ -234,7 +234,7 @@ class Configuration
      *
      * @return boolean
      */
-    public function isCreatedByFactory()
+    public function isCreatedByFactory(): bool
     {
         return ($this->factoryObjectName !== '' && $this->factoryMethodName !== '');
     }
@@ -245,7 +245,7 @@ class Configuration
      * @param integer $scope Name of the scope
      * @return void
      */
-    public function setScope($scope)
+    public function setScope(int $scope)
     {
         $this->scope = $scope;
     }
@@ -253,9 +253,9 @@ class Configuration
     /**
      * Returns the scope for this object
      *
-     * @return string The scope, one of the SCOPE constants
+     * @return int The scope, one of the SCOPE constants
      */
-    public function getScope()
+    public function getScope(): int
     {
         return $this->scope;
     }
@@ -266,7 +266,7 @@ class Configuration
      * @param integer $autowiring One of the AUTOWIRING_MODE_* constants
      * @return void
      */
-    public function setAutowiring($autowiring)
+    public function setAutowiring(int $autowiring)
     {
         $this->autowiring = $autowiring;
     }
@@ -276,7 +276,7 @@ class Configuration
      *
      * @return integer Value of one of the AUTOWIRING_MODE_* constants
      */
-    public function getAutowiring()
+    public function getAutowiring(): int
     {
         return $this->autowiring;
     }
@@ -287,7 +287,7 @@ class Configuration
      * @param string $lifecycleInitializationMethodName Name of the method to call after setter injection
      * @return void
      */
-    public function setLifecycleInitializationMethodName($lifecycleInitializationMethodName)
+    public function setLifecycleInitializationMethodName(string $lifecycleInitializationMethodName)
     {
         $this->lifecycleInitializationMethodName = $lifecycleInitializationMethodName;
     }
@@ -297,7 +297,7 @@ class Configuration
      *
      * @return string The name of the initialization method
      */
-    public function getLifecycleInitializationMethodName()
+    public function getLifecycleInitializationMethodName(): string
     {
         return $this->lifecycleInitializationMethodName;
     }
@@ -308,7 +308,7 @@ class Configuration
      * @param string $lifecycleShutdownMethodName Name of the method to call during shutdown of the framework
      * @return void
      */
-    public function setLifecycleShutdownMethodName($lifecycleShutdownMethodName)
+    public function setLifecycleShutdownMethodName(string $lifecycleShutdownMethodName)
     {
         $this->lifecycleShutdownMethodName = $lifecycleShutdownMethodName;
     }
@@ -318,7 +318,7 @@ class Configuration
      *
      * @return string The name of the shutdown method
      */
-    public function getLifecycleShutdownMethodName()
+    public function getLifecycleShutdownMethodName(): string
     {
         return $this->lifecycleShutdownMethodName;
     }
@@ -351,7 +351,7 @@ class Configuration
      *
      * @return array<ConfigurationProperty>
      */
-    public function getProperties()
+    public function getProperties(): array
     {
         return $this->properties;
     }
@@ -406,7 +406,7 @@ class Configuration
      *
      * @return array<ConfigurationArgument> A sorted array of ConfigurationArgument objects with the argument position as index
      */
-    public function getArguments()
+    public function getArguments(): array
     {
         if (count($this->arguments) < 1) {
             return [];
@@ -428,7 +428,7 @@ class Configuration
      * @param string $hint The hint - e.g. the filename of the configuration file
      * @return void
      */
-    public function setConfigurationSourceHint($hint)
+    public function setConfigurationSourceHint(string $hint)
     {
         $this->configurationSourceHint = $hint;
     }
@@ -438,7 +438,7 @@ class Configuration
      *
      * @return string The hint - e.g. the filename of the configuration file
      */
-    public function getConfigurationSourceHint()
+    public function getConfigurationSourceHint(): string
     {
         return $this->configurationSourceHint;
     }

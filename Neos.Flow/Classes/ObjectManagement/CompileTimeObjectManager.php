@@ -160,7 +160,7 @@ class CompileTimeObjectManager extends ObjectManager
      *
      * @return array
      */
-    public function getRegisteredClassNames()
+    public function getRegisteredClassNames(): array
     {
         return $this->registeredClassNames;
     }
@@ -171,7 +171,7 @@ class CompileTimeObjectManager extends ObjectManager
      * @param integer $scope One of the ObjectConfiguration::SCOPE_ constants
      * @return array An array of class names configured with the given scope
      */
-    public function getClassNamesByScope($scope)
+    public function getClassNamesByScope(int $scope): array
     {
         if (!isset($this->cachedClassNamesByScope[$scope])) {
             foreach ($this->objects as $objectName => $information) {
@@ -199,7 +199,7 @@ class CompileTimeObjectManager extends ObjectManager
      *
      * @throws InvalidConfigurationTypeException
      */
-    protected function registerClassFiles(array $packages)
+    protected function registerClassFiles(array $packages): array
     {
         $includeClassesConfiguration = [];
         if (isset($this->allSettings['Neos']['Flow']['object']['includeClasses'])) {
@@ -244,7 +244,7 @@ class CompileTimeObjectManager extends ObjectManager
      * @throws InvalidConfigurationTypeException
      * @throws \Neos\Flow\Configuration\Exception\NoSuchOptionException
      */
-    protected function filterClassNamesFromConfiguration(array $classNames, $includeClassesConfiguration)
+    protected function filterClassNamesFromConfiguration(array $classNames, array $includeClassesConfiguration): array
     {
         if (isset($this->allSettings['Neos']['Flow']['object']['excludeClasses'])) {
             $this->systemLogger->log('Using "Neos.Flow.object.excludeClasses" is deprecated. Non flow packages are no longer enabled for object management by default, you can use "Neos.Flow.object.includeClasses" to add them. You can also use it to remove classes of flow packages from object management as any classes that do not match the given expression(s) are excluded if it is configured for a package.');
@@ -267,7 +267,7 @@ class CompileTimeObjectManager extends ObjectManager
      * @param array $registeredPackageKeys
      * @return array
      */
-    protected function collectExcludedPackages($registeredPackageKeys)
+    protected function collectExcludedPackages(array $registeredPackageKeys): array
     {
         $excludeClasses = [];
         foreach ($this->allSettings['Neos']['Flow']['object']['excludeClasses'] as $packageKey => $filterExpressions) {
@@ -295,7 +295,7 @@ class CompileTimeObjectManager extends ObjectManager
      * @return array the remaining class
      * @throws InvalidConfigurationTypeException
      */
-    protected function applyClassFilterConfiguration($classNames, $filterConfiguration, $includeOrExclude = 'include')
+    protected function applyClassFilterConfiguration(array $classNames, array $filterConfiguration, string $includeOrExclude = 'include'): array
     {
         if (!in_array($includeOrExclude, ['include', 'exclude'])) {
             throw new \InvalidArgumentException('The argument $includeOrExclude must be one of "include" or "exclude", the given value was not allowed.', 1423726253);
@@ -342,7 +342,7 @@ class CompileTimeObjectManager extends ObjectManager
      *
      * @return array
      */
-    protected function buildObjectsArray()
+    protected function buildObjectsArray(): array
     {
         $objects = [];
         foreach ($this->objectConfigurations as $objectConfiguration) {
@@ -382,7 +382,7 @@ class CompileTimeObjectManager extends ObjectManager
      *
      * @return array
      */
-    public function getObjectConfigurations()
+    public function getObjectConfigurations(): array
     {
         return $this->objectConfigurations;
     }

@@ -72,7 +72,7 @@ class ConfigurationBuilder
      * @return array<Configuration> Object configurations
      * @throws InvalidObjectConfigurationException
      */
-    public function buildObjectConfigurations(array $availableClassAndInterfaceNamesByPackage, array $rawObjectConfigurationsByPackages)
+    public function buildObjectConfigurations(array $availableClassAndInterfaceNamesByPackage, array $rawObjectConfigurationsByPackages): array
     {
         $objectConfigurations = [];
         $interfaceNames = [];
@@ -164,7 +164,7 @@ class ConfigurationBuilder
      * @param array $rawObjectConfiguration
      * @return array
      */
-    protected function enhanceRawConfigurationWithAnnotationOptions($className, array $rawObjectConfiguration)
+    protected function enhanceRawConfigurationWithAnnotationOptions(string $className, array $rawObjectConfiguration): array
     {
         if ($this->reflectionService->isClassAnnotatedWith($className, Flow\Scope::class)) {
             $rawObjectConfiguration['scope'] = $this->reflectionService->getClassAnnotation($className, Flow\Scope::class)->value;
@@ -185,9 +185,9 @@ class ConfigurationBuilder
      * @return Configuration The object configuration object
      * @throws InvalidObjectConfigurationException if errors occurred during parsing
      */
-    protected function parseConfigurationArray($objectName, array $rawConfigurationOptions, $configurationSourceHint = '', $existingObjectConfiguration = null)
+    protected function parseConfigurationArray(string $objectName, array $rawConfigurationOptions, string $configurationSourceHint = '', Configuration $existingObjectConfiguration = null): Configuration
     {
-        $className = (isset($rawConfigurationOptions['className']) ? $rawConfigurationOptions['className'] : $objectName);
+        $className = $rawConfigurationOptions['className'] ?? $objectName;
         $objectConfiguration = ($existingObjectConfiguration instanceof Configuration) ? $existingObjectConfiguration : new Configuration($objectName, $className);
         $objectConfiguration->setConfigurationSourceHint($configurationSourceHint);
 
@@ -253,7 +253,7 @@ class ConfigurationBuilder
      * @return integer The scope translated into a Configuration::SCOPE_* constant
      * @throws InvalidObjectConfigurationException if an invalid scope has been specified
      */
-    protected function parseScope($value)
+    protected function parseScope(string $value): int
     {
         switch ($value) {
             case 'singleton':
@@ -274,7 +274,7 @@ class ConfigurationBuilder
      * @return integer The autowiring option translated into one of Configuration::AUTOWIRING_MODE_*
      * @throws InvalidObjectConfigurationException if an invalid option has been specified
      */
-    protected static function parseAutowiring($value)
+    protected static function parseAutowiring($value): int
     {
         switch ($value) {
             case true:
@@ -297,7 +297,7 @@ class ConfigurationBuilder
      * @return ConfigurationProperty A configuration property of type object
      * @throws InvalidObjectConfigurationException
      */
-    protected function parsePropertyOfTypeObject($propertyName, $objectNameOrConfiguration, Configuration $parentObjectConfiguration)
+    protected function parsePropertyOfTypeObject(string $propertyName, $objectNameOrConfiguration, Configuration $parentObjectConfiguration): ConfigurationProperty
     {
         if (is_array($objectNameOrConfiguration)) {
             if (isset($objectNameOrConfiguration['name'])) {
@@ -331,7 +331,7 @@ class ConfigurationBuilder
      * @return ConfigurationArgument A configuration argument of type object
      * @throws InvalidObjectConfigurationException
      */
-    protected function parseArgumentOfTypeObject($argumentName, $objectNameOrConfiguration, $configurationSourceHint)
+    protected function parseArgumentOfTypeObject(string $argumentName, $objectNameOrConfiguration, string $configurationSourceHint): ConfigurationArgument
     {
         if (is_array($objectNameOrConfiguration)) {
             if (isset($objectNameOrConfiguration['name'])) {
@@ -392,7 +392,7 @@ class ConfigurationBuilder
                         $debuggingHint = sprintf('No default implementation for the required interface %s was configured, therefore no specific class name could be used for this dependency. ', $parameterInformation['class']);
                     }
 
-                    if (isset($arguments[$index]) && ($objectConfiguration->getAutowiring() === Configuration::AUTOWIRING_MODE_OFF || $autowiringAnnotation !== null && $autowiringAnnotation->enabled === false)) {
+                    if (isset($arguments[$index]) && ($objectConfiguration->getAutowiring() === Configuration::AUTOWIRING_MODE_OFF || ($autowiringAnnotation !== null && $autowiringAnnotation->enabled === false))) {
                         $arguments[$index]->setAutowiring(Configuration::AUTOWIRING_MODE_OFF);
                         $arguments[$index]->set($index, null);
                     }

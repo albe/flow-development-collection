@@ -50,11 +50,11 @@ class ConfigurationArgument
     /**
      * Constructor - sets the index, value and type of the argument
      *
-     * @param string $index Index of the argument
+     * @param integer $index Index of the argument
      * @param mixed $value Value of the argument
      * @param integer $type Type of the argument - one of the argument_TYPE_* constants
      */
-    public function __construct($index, $value, $type = self::ARGUMENT_TYPES_STRAIGHTVALUE)
+    public function __construct(int $index, $value, int $type = self::ARGUMENT_TYPES_STRAIGHTVALUE)
     {
         $this->set($index, $value, $type);
     }
@@ -67,7 +67,7 @@ class ConfigurationArgument
      * @param integer $type Type of the argument - one of the ARGUMENT_TYPE_* constants
      * @return void
      */
-    public function set($index, $value, $type = self::ARGUMENT_TYPES_STRAIGHTVALUE)
+    public function set(int $index, $value, int $type = self::ARGUMENT_TYPES_STRAIGHTVALUE)
     {
         $this->index = $index;
         $this->value = $value;
@@ -77,9 +77,9 @@ class ConfigurationArgument
     /**
      * Returns the index (position) of the argument
      *
-     * @return string Index of the argument
+     * @return integer Index of the argument
      */
-    public function getIndex()
+    public function getIndex(): int
     {
         return $this->index;
     }
@@ -99,7 +99,7 @@ class ConfigurationArgument
      *
      * @return integer Type of the argument - one of the ARGUMENT_TYPES_* constants
      */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }
@@ -110,7 +110,7 @@ class ConfigurationArgument
      * @param integer $autowiring One of the Configuration::AUTOWIRING_MODE_* constants
      * @return void
      */
-    public function setAutowiring($autowiring)
+    public function setAutowiring(int $autowiring)
     {
         $this->autowiring = $autowiring;
     }
@@ -120,7 +120,7 @@ class ConfigurationArgument
      *
      * @return integer Value of one of the Configuration::AUTOWIRING_MODE_* constants
      */
-    public function getAutowiring()
+    public function getAutowiring(): int
     {
         return $this->autowiring;
     }

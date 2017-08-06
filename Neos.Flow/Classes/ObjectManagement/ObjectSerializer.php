@@ -119,7 +119,7 @@ class ObjectSerializer
      * @param boolean $isTopLevelItem Internal flag for managing the recursion
      * @return array The property array
      */
-    public function serializeObjectAsPropertyArray($object, $isTopLevelItem = true)
+    public function serializeObjectAsPropertyArray($object, bool $isTopLevelItem = true): array
     {
         if ($isTopLevelItem) {
             $this->objectReferences = new \SplObjectStorage();
@@ -201,6 +201,7 @@ class ObjectSerializer
         if ($isTopLevelItem) {
             return $this->objectsAsArray;
         }
+        return [];
     }
 
     /**
@@ -211,7 +212,7 @@ class ObjectSerializer
      * @param array $arrayProperty The source array property
      * @return array The array property to store
      */
-    protected function buildStorageArrayForArrayProperty(array $arrayProperty)
+    protected function buildStorageArrayForArrayProperty(array $arrayProperty): array
     {
         $storableArray = [];
 
@@ -241,7 +242,7 @@ class ObjectSerializer
      * @param array $dataArray The serialized objects array
      * @return array The deserialized objects in an array
      */
-    public function deserializeObjectsArray(array $dataArray)
+    public function deserializeObjectsArray(array $dataArray): array
     {
         $this->objectsAsArray = $dataArray;
         $objects = [];
@@ -263,7 +264,7 @@ class ObjectSerializer
      * @param array $objectData The object data array
      * @return object
      */
-    protected function reconstituteObject($objectHash, array $objectData)
+    protected function reconstituteObject(string $objectHash, array $objectData)
     {
         if (isset($this->reconstitutedObjects[$objectHash])) {
             return $this->reconstitutedObjects[$objectHash];
@@ -313,7 +314,7 @@ class ObjectSerializer
      * @param array $dataArray The data array to reconstitute from
      * @return array The reconstituted array
      */
-    protected function reconstituteArray($dataArray)
+    protected function reconstituteArray(array $dataArray): array
     {
         $result = [];
 
@@ -354,7 +355,7 @@ class ObjectSerializer
      * @param array $dataArray The data array to reconstitute from
      * @return \Doctrine\Common\Collections\Collection The reconstituted Collection
      */
-    protected function reconstituteCollection($type, array $dataArray)
+    protected function reconstituteCollection(string $type, array $dataArray): \Doctrine\Common\Collections\Collection
     {
         $result = new $type();
 
@@ -371,7 +372,7 @@ class ObjectSerializer
      * @param array $dataArray The data array to reconstitute from
      * @return \SplObjectStorage The reconstituted SplObjectStorage
      */
-    protected function reconstituteSplObjectStorage(array $dataArray)
+    protected function reconstituteSplObjectStorage(array $dataArray): \SplObjectStorage
     {
         $result = new \SplObjectStorage();
 
@@ -389,7 +390,7 @@ class ObjectSerializer
      * @param string $uuid The UUID of the object
      * @return object The reconstituted persistence object, NULL if none was found
      */
-    protected function reconstitutePersistenceObject($className, $uuid)
+    protected function reconstitutePersistenceObject(string $className, string $uuid)
     {
         return $this->persistenceManager->getObjectByIdentifier($uuid, $className);
     }
