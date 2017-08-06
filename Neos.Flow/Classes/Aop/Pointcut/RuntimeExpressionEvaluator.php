@@ -96,7 +96,7 @@ class RuntimeExpressionEvaluator
      * @return mixed
      * @throws Exception
      */
-    public function evaluate($privilegeIdentifier, JoinPointInterface $joinPoint)
+    public function evaluate(string $privilegeIdentifier, JoinPointInterface $joinPoint)
     {
         $functionName = $this->generateExpressionFunctionName($privilegeIdentifier);
 
@@ -112,9 +112,9 @@ class RuntimeExpressionEvaluator
      *
      * @param string $privilegeIdentifier MD5 hash that identifies a privilege
      * @param string $expression
-     * @return string
+     * @return void
      */
-    public function addExpression($privilegeIdentifier, $expression)
+    public function addExpression(string $privilegeIdentifier, string $expression)
     {
         $this->newExpressions[$this->generateExpressionFunctionName($privilegeIdentifier)] = $expression;
     }
@@ -123,7 +123,7 @@ class RuntimeExpressionEvaluator
      * @param string $privilegeIdentifier MD5 hash that identifies a privilege
      * @return string
      */
-    protected function generateExpressionFunctionName($privilegeIdentifier)
+    protected function generateExpressionFunctionName(string $privilegeIdentifier): string
     {
         return 'flow_aop_expression_' . $privilegeIdentifier;
     }
