@@ -102,7 +102,7 @@ class FileMonitor
      * @param Bootstrap $bootstrap
      * @return FileMonitor
      */
-    public static function createFileMonitorAtBoot($identifier, Bootstrap $bootstrap)
+    public static function createFileMonitorAtBoot(string $identifier, Bootstrap $bootstrap): FileMonitor
     {
         $fileMonitorCache = $bootstrap->getEarlyInstance(CacheManager::class)->getCache('Flow_Monitor');
 
@@ -172,7 +172,7 @@ class FileMonitor
      *
      * @return string
      */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->identifier;
     }
@@ -186,11 +186,8 @@ class FileMonitor
      * @throws \InvalidArgumentException
      * @api
      */
-    public function monitorFile($pathAndFilename)
+    public function monitorFile(string $pathAndFilename)
     {
-        if (!is_string($pathAndFilename)) {
-            throw new \InvalidArgumentException('String expected, ' . gettype($pathAndFilename), ' given.', 1231171809);
-        }
         $pathAndFilename = Files::getUnixStylePath($pathAndFilename);
         if (array_search($pathAndFilename, $this->monitoredFiles) === false) {
             $this->monitoredFiles[] = $pathAndFilename;
@@ -207,11 +204,8 @@ class FileMonitor
      * @throws \InvalidArgumentException
      * @api
      */
-    public function monitorDirectory($path, $filenamePattern = null)
+    public function monitorDirectory(string $path, string $filenamePattern = null)
     {
-        if (!is_string($path)) {
-            throw new \InvalidArgumentException('String expected, ' . gettype($path), ' given.', 1231171810);
-        }
         $path = Files::getNormalizedPath(Files::getUnixStylePath($path));
         if (!array_key_exists($path, $this->monitoredDirectories)) {
             $this->monitoredDirectories[$path] = $filenamePattern;
@@ -224,7 +218,7 @@ class FileMonitor
      * @return array A list of paths and filenames of monitored files
      * @api
      */
-    public function getMonitoredFiles()
+    public function getMonitoredFiles(): array
     {
         return $this->monitoredFiles;
     }
@@ -235,7 +229,7 @@ class FileMonitor
      * @return array A list of paths of monitored directories
      * @api
      */
-    public function getMonitoredDirectories()
+    public function getMonitoredDirectories(): array
     {
         return array_keys($this->monitoredDirectories);
     }
@@ -283,10 +277,10 @@ class FileMonitor
      * Detect changes for one of the monitored paths.
      *
      * @param string $path
-     * @param string $filenamePattern
+     * @param string|null $filenamePattern
      * @return boolean TRUE if any changes were detected in this path
      */
-    protected function detectChangesOnPath($path, $filenamePattern)
+    protected function detectChangesOnPath(string $path, string $filenamePattern = null): bool
     {
         $currentDirectoryChanged = false;
         try {
@@ -340,10 +334,10 @@ class FileMonitor
      * Read a monitored directory recursively, taking into account filename patterns
      *
      * @param string $path The path of a monitored directory
-     * @param string $filenamePattern
+     * @param string|null $filenamePattern
      * @return \Generator<string> A generator returning filenames with full path
      */
-    protected function readMonitoredDirectoryRecursively($path, $filenamePattern)
+    protected function readMonitoredDirectoryRecursively(string $path, string $filenamePattern = null): \Generator
     {
         $directories = [Files::getNormalizedPath($path)];
         while ($directories !== []) {
@@ -398,7 +392,7 @@ class FileMonitor
      * @param array $files
      * @return void
      */
-    protected function setDetectedFilesForPath($path, array $files)
+    protected function setDetectedFilesForPath(string $path, array $files)
     {
         $this->directoriesAndFiles[$path] = $files;
     }
@@ -409,7 +403,7 @@ class FileMonitor
      * @param array $pathAndFilenames A list of full path and filenames of files to check
      * @return array An array of changed files (key = path and filenmae) and their status (value)
      */
-    protected function detectChangedFiles(array $pathAndFilenames)
+    protected function detectChangedFiles(array $pathAndFilenames): array
     {
         $changedFiles = [];
         foreach ($pathAndFilenames as $pathAndFilename) {
@@ -429,7 +423,7 @@ class FileMonitor
      * @return void
      * @api
      */
-    protected function emitFilesHaveChanged($monitorIdentifier, array $changedFiles)
+    protected function emitFilesHaveChanged(string $monitorIdentifier, array $changedFiles)
     {
         $this->signalDispatcher->dispatch(FileMonitor::class, 'filesHaveChanged', [$monitorIdentifier, $changedFiles]);
     }
@@ -442,7 +436,7 @@ class FileMonitor
      * @return void
      * @api
      */
-    protected function emitDirectoriesHaveChanged($monitorIdentifier, array $changedDirectories)
+    protected function emitDirectoriesHaveChanged(string $monitorIdentifier, array $changedDirectories)
     {
         $this->signalDispatcher->dispatch(FileMonitor::class, 'directoriesHaveChanged', [$monitorIdentifier, $changedDirectories]);
     }
