@@ -143,8 +143,8 @@ class Logger implements SystemLoggerInterface, ThrowableLoggerInterface, Securit
     protected function logError($error, array $additionalData = [])
     {
         $backTrace = $error->getTrace();
-        $className = isset($backTrace[0]['class']) ? $backTrace[0]['class'] : '?';
-        $methodName = isset($backTrace[0]['function']) ? $backTrace[0]['function'] : '?';
+        $className = $backTrace[0]['class'] ?? '?';
+        $methodName = $backTrace[0]['function'] ?? '?';
         $message = $this->getErrorLogMessage($error);
 
         if ($error->getPrevious() !== null) {
@@ -153,7 +153,7 @@ class Logger implements SystemLoggerInterface, ThrowableLoggerInterface, Securit
 
         $explodedClassName = explode('\\', $className);
         // FIXME: This is not really the package key:
-        $packageKey = (isset($explodedClassName[1])) ? $explodedClassName[1] : null;
+        $packageKey = $explodedClassName[1] ?? null;
 
         if (!file_exists(FLOW_PATH_DATA . 'Logs/Exceptions')) {
             mkdir(FLOW_PATH_DATA . 'Logs/Exceptions');
@@ -173,10 +173,10 @@ class Logger implements SystemLoggerInterface, ThrowableLoggerInterface, Securit
     /**
      * Get current error post mortem informations with support for error chaining
      *
-     * @param object $error \Exception or \Throwable
+     * @param \Throwable $error
      * @return string
      */
-    protected function renderErrorInfo($error)
+    protected function renderErrorInfo(\Throwable $error): string
     {
         $maximumDepth = 100;
         $backTrace = $error->getTrace();
@@ -201,10 +201,10 @@ class Logger implements SystemLoggerInterface, ThrowableLoggerInterface, Securit
     }
 
     /**
-     * @param object $error \Exception or \Throwable
+     * @param \Throwable $error
      * @return string
      */
-    protected function getErrorLogMessage($error)
+    protected function getErrorLogMessage(\Throwable $error): string
     {
         $errorCodeNumber = ($error->getCode() > 0) ? ' #' . $error->getCode() : '';
         $backTrace = $error->getTrace();
@@ -219,7 +219,7 @@ class Logger implements SystemLoggerInterface, ThrowableLoggerInterface, Securit
      * @param array $backTrace
      * @return string
      */
-    protected function renderBacktrace($message, $backTrace)
+    protected function renderBacktrace(string $message, array $backTrace): string
     {
         return $message . PHP_EOL . PHP_EOL . Debugger::getBacktraceCode($backTrace, false, true);
     }
@@ -229,7 +229,7 @@ class Logger implements SystemLoggerInterface, ThrowableLoggerInterface, Securit
      *
      * @return string
      */
-    protected function renderRequestInfo()
+    protected function renderRequestInfo(): string
     {
         $output = '';
         if (Bootstrap::$staticObjectManager instanceof ObjectManagerInterface) {

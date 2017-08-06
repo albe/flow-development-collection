@@ -102,7 +102,7 @@ class AnsiConsoleBackend extends ConsoleBackend
      * @param string $output
      * @return string
      */
-    protected function formatOutput($output)
+    protected function formatOutput(string $output): string
     {
         $tagFormats = $this->tagFormats;
         $disableAnsi = $this->disableAnsi;
@@ -123,7 +123,7 @@ class AnsiConsoleBackend extends ConsoleBackend
     /**
      * @param boolean $disableAnsi
      */
-    public function setDisableAnsi($disableAnsi)
+    public function setDisableAnsi(bool $disableAnsi)
     {
         $this->disableAnsi = $disableAnsi;
     }
@@ -131,7 +131,7 @@ class AnsiConsoleBackend extends ConsoleBackend
     /**
      * @return boolean
      */
-    public function getDisableAnsi()
+    public function getDisableAnsi(): bool
     {
         return $this->disableAnsi;
     }

@@ -28,10 +28,10 @@ class LoggerFactory
      * @param string $loggerObjectName Object name of the log frontend
      * @param mixed $backendObjectNames Object name (or array of object names) of the log backend(s)
      * @param array $backendOptions (optional) Array of backend options. If more than one backend is specified, this is an array of array.
-     * @return \Neos\Flow\Log\LoggerInterface The created logger frontend
+     * @return LoggerInterface The created logger frontend
      * @api
      */
-    public function create($identifier, $loggerObjectName, $backendObjectNames, array $backendOptions = [])
+    public function create(string $identifier, string $loggerObjectName, $backendObjectNames, array $backendOptions = []): LoggerInterface
     {
         $logger = new $loggerObjectName;
 

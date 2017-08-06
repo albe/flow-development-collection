@@ -38,7 +38,7 @@ abstract class AbstractBackend implements BackendInterface
      */
     public function __construct($options = [])
     {
-        if (is_array($options) || $options instanceof \ArrayAccess) {
+        if (is_array($options) || $options instanceof \Iterator) {
             foreach ($options as $optionKey => $optionValue) {
                 $methodName = 'set' . ucfirst($optionKey);
                 if (method_exists($this, $methodName)) {
@@ -55,7 +55,7 @@ abstract class AbstractBackend implements BackendInterface
      * @return void
      * @api
      */
-    public function setSeverityThreshold($severityThreshold)
+    public function setSeverityThreshold(int $severityThreshold)
     {
         $this->severityThreshold = $severityThreshold;
     }
@@ -66,7 +66,7 @@ abstract class AbstractBackend implements BackendInterface
      * @param boolean $logIpAddress Set to TRUE to enable logging of IP address, or FALSE to disable
      * @return void
      */
-    public function setLogIpAddress($logIpAddress)
+    public function setLogIpAddress(bool $logIpAddress)
     {
         $this->logIpAddress = $logIpAddress;
     }
@@ -78,7 +78,7 @@ abstract class AbstractBackend implements BackendInterface
      * @param integer $spaces Number of spaces to add before a line
      * @return string text output
      */
-    protected function getFormattedVarDump($var, $spaces = 4)
+    protected function getFormattedVarDump($var, int $spaces = 4)
     {
         if ($spaces > 100) {
             return null;

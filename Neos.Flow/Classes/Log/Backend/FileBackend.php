@@ -65,7 +65,7 @@ class FileBackend extends AbstractBackend
      * @return void
      * @api
      */
-    public function setLogFileURL($logFileUrl)
+    public function setLogFileURL(string $logFileUrl)
     {
         $this->logFileUrl = $logFileUrl;
     }
@@ -80,7 +80,7 @@ class FileBackend extends AbstractBackend
      * @return void
      * @api
      */
-    public function setCreateParentDirectories($flag)
+    public function setCreateParentDirectories(bool $flag)
     {
         $this->createParentDirectories = ($flag === true);
     }
@@ -94,7 +94,7 @@ class FileBackend extends AbstractBackend
      * @api
      * @see setLogFilesToKeep()
      */
-    public function setMaximumLogFileSize($maximumLogFileSize)
+    public function setMaximumLogFileSize(int $maximumLogFileSize)
     {
         $this->maximumLogFileSize = $maximumLogFileSize;
     }
@@ -107,7 +107,7 @@ class FileBackend extends AbstractBackend
      * @api
      * @see setMaximumLogFileSize()
      */
-    public function setLogFilesToKeep($logFilesToKeep)
+    public function setLogFilesToKeep(int $logFilesToKeep)
     {
         $this->logFilesToKeep = $logFilesToKeep;
     }
@@ -120,7 +120,7 @@ class FileBackend extends AbstractBackend
      * @return void
      * @api
      */
-    public function setLogMessageOrigin($flag)
+    public function setLogMessageOrigin(bool $flag)
     {
         $this->logMessageOrigin = ($flag === true);
     }
@@ -188,9 +188,8 @@ class FileBackend extends AbstractBackend
     {
         if (file_exists($this->logFileUrl . '.lock')) {
             return;
-        } else {
-            touch($this->logFileUrl . '.lock');
         }
+        touch($this->logFileUrl . '.lock');
 
         if ($this->logFilesToKeep === 0) {
             unlink($this->logFileUrl);
