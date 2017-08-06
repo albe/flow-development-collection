@@ -75,7 +75,7 @@ class CldrRepository
      * @param string $filename Relative (from CLDR root) path to existing CLDR file
      * @return CldrModel|boolean A CldrModel instance or FALSE on failure
      */
-    public function getModel($filename)
+    public function getModel(string $filename)
     {
         $filename = Files::concatenatePaths([$this->cldrBasePath, $filename . '.xml']);
 
@@ -106,7 +106,7 @@ class CldrRepository
      * @param string $directoryPath Relative path to existing CLDR directory which contains one file per locale (see 'main' directory in CLDR for example)
      * @return CldrModel A CldrModel instance or NULL on failure
      */
-    public function getModelForLocale(I18n\Locale $locale, $directoryPath = 'main')
+    public function getModelForLocale(I18n\Locale $locale, string $directoryPath = 'main')
     {
         $directoryPath = Files::concatenatePaths([$this->cldrBasePath, $directoryPath]);
 
@@ -134,7 +134,7 @@ class CldrRepository
      * @param string $directoryPath Relative path to existing CLDR directory which contains one file per locale (see 'main' directory in CLDR for example)
      * @return array<string> Absolute paths to CLDR files in hierarchy
      */
-    protected function findLocaleChain(I18n\Locale $locale, $directoryPath)
+    protected function findLocaleChain(I18n\Locale $locale, string $directoryPath): array
     {
         $filesInHierarchy = [Files::concatenatePaths([$directoryPath, (string)$locale . '.xml'])];
 

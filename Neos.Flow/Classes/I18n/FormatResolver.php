@@ -98,7 +98,7 @@ class FormatResolver
      * @throws Exception\IndexOutOfBoundsException When trying to format nonexistent value
      * @api
      */
-    public function resolvePlaceholders($textWithPlaceholders, array $arguments, Locale $locale = null)
+    public function resolvePlaceholders(string $textWithPlaceholders, array $arguments, Locale $locale = null): string
     {
         if ($locale === null) {
             $locale = $this->localizationService->getConfiguration()->getDefaultLocale();
@@ -157,7 +157,7 @@ class FormatResolver
      * @throws Exception\UnknownFormatterException When formatter for a name given does not exist
      * @throws Exception\InvalidFormatterException When formatter for a name given does not exist
      */
-    protected function getFormatter($formatterType)
+    protected function getFormatter(string $formatterType): Formatter\FormatterInterface
     {
         $foundFormatter = false;
         $formatterType = ltrim($formatterType, '\\');

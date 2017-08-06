@@ -39,10 +39,10 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
     protected $parameters = [];
 
     /**
-     * @param string $id
-     * @param string $value
+     * @param string|null $id
+     * @param string|null $value
      */
-    public function __construct($id = null, $value = null)
+    public function __construct(string $id = null, string $value = null)
     {
         if ($id !== null) {
             $this->parameters['id'] = $id;
@@ -70,7 +70,7 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * @param string $id Id to use for finding translation (trans-unit id in XLIFF)
      * @return TranslationParameterToken
      */
-    public function id($id)
+    public function id(string $id): TranslationParameterToken
     {
         $this->parameters['id'] = $id;
         return $this;
@@ -82,7 +82,7 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * @param string $value
      * @return TranslationParameterToken
      */
-    public function value($value)
+    public function value(string $value): TranslationParameterToken
     {
         $this->parameters['value'] = $value;
         return $this;
@@ -94,7 +94,7 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * @param array $arguments Numerically indexed array of values to be inserted into placeholders
      * @return TranslationParameterToken
      */
-    public function arguments(array $arguments)
+    public function arguments(array $arguments): TranslationParameterToken
     {
         $this->parameters['arguments'] = $arguments;
         return $this;
@@ -106,7 +106,7 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * @param string $source Name of file with translations
      * @return TranslationParameterToken
      */
-    public function source($source)
+    public function source(string $source): TranslationParameterToken
     {
         $this->parameters['source'] = $source;
         return $this;
@@ -115,10 +115,10 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
     /**
      * Set the package.
      *
-     * @param string $package Target package key. If not set, the current package key will be used
+     * @param string|null $package Target package key. If not set, the current package key will be used
      * @return TranslationParameterToken
      */
-    public function package($package)
+    public function package(string $package = null): TranslationParameterToken
     {
         $this->parameters['package'] = $package;
         return $this;
@@ -127,10 +127,10 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
     /**
      * Set the quantity.
      *
-     * @param mixed $quantity A number to find plural form for (float or int), NULL to not use plural forms
+     * @param float|int|null $quantity A number to find plural form for (float or int), NULL to not use plural forms
      * @return TranslationParameterToken
      */
-    public function quantity($quantity)
+    public function quantity(float $quantity = null): TranslationParameterToken
     {
         $this->parameters['quantity'] = $quantity;
         return $this;
@@ -140,12 +140,16 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * Set the locale.
      * The locale Identifier will be converted into a Locale
      *
-     * @param string $locale An identifier of locale to use (NULL for use the default locale)
+     * @param string|null $locale An identifier of locale to use (NULL for use the default locale)
      * @return TranslationParameterToken
      * @throws FlowException
      */
-    public function locale($locale)
+    public function locale(string $locale = null): TranslationParameterToken
     {
+        if ($locale === null) {
+            $this->parameters['locale'] = null;
+            return $this;
+        }
         try {
             $this->parameters['locale'] = new Locale($locale);
         } catch (InvalidLocaleIdentifierException $e) {
@@ -161,17 +165,17 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * @param array $overrides An associative array to override the collected parameters
      * @return string
      */
-    public function translate(array $overrides = [])
+    public function translate(array $overrides = []): string
     {
         array_replace_recursive($this->parameters, $overrides);
 
-        $id = isset($this->parameters['id']) ? $this->parameters['id'] : null;
-        $value = isset($this->parameters['value']) ? $this->parameters['value'] : null;
-        $arguments = isset($this->parameters['arguments']) ? $this->parameters['arguments'] : [];
-        $source = isset($this->parameters['source']) ? $this->parameters['source'] : 'Main';
-        $package = isset($this->parameters['package']) ? $this->parameters['package'] : null;
-        $quantity = isset($this->parameters['quantity']) ? $this->parameters['quantity'] : null;
-        $locale = isset($this->parameters['locale']) ? $this->parameters['locale'] : null;
+        $id = $this->parameters['id'] ?? null;
+        $value = $this->parameters['value'] ?? null;
+        $arguments = $this->parameters['arguments'] ?? [];
+        $source = $this->parameters['source'] ?? 'Main';
+        $package = $this->parameters['package'] ?? null;
+        $quantity = $this->parameters['quantity'] ?? null;
+        $locale = $this->parameters['locale'] ?? null;
 
         if ($id === null) {
             return $this->translator->translateByOriginalLabel($value, $arguments, $quantity, $locale, $source, $package);
@@ -187,8 +191,9 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
 
     /**
      * Runs translate to avoid the need of calling translate as a finishing method
+     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->translate();
     }
@@ -199,7 +204,7 @@ class TranslationParameterToken implements ProtectedContextAwareInterface
      * @param string $methodName
      * @return boolean
      */
-    public function allowsCallOfMethod($methodName)
+    public function allowsCallOfMethod($methodName): bool
     {
         return true;
     }

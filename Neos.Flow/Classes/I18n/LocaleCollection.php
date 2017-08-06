@@ -50,7 +50,7 @@ class LocaleCollection
      * @param Locale $locale The Locale to be inserted
      * @return boolean FALSE when same locale was already inserted before
      */
-    public function addLocale(Locale $locale)
+    public function addLocale(Locale $locale): bool
     {
         if (isset($this->localeCollection[(string)$locale])) {
             return false;

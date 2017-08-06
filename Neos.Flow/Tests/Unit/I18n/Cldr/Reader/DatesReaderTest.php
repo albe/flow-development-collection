@@ -71,13 +71,13 @@ class DatesReaderTest extends UnitTestCase
         $this->createCacheExpectations($mockCache);
 
         $reader = $this->getAccessibleMock(I18n\Cldr\Reader\DatesReader::class, ['parseFormat']);
-        $reader->expects($this->once())->method('parseFormat')->with('mockFormatString')->will($this->returnValue('mockParsedFormat'));
+        $reader->expects($this->once())->method('parseFormat')->with('mockFormatString')->will($this->returnValue(['mockParsedFormat']));
         $reader->injectCldrRepository($mockRepository);
         $reader->injectCache($mockCache);
         $reader->initializeObject();
 
         $result = $reader->parseFormatFromCldr($this->sampleLocale, I18n\Cldr\Reader\DatesReader::FORMAT_TYPE_DATE, I18n\Cldr\Reader\DatesReader::FORMAT_LENGTH_DEFAULT);
-        $this->assertEquals('mockParsedFormat', $result);
+        $this->assertEquals(['mockParsedFormat'], $result);
 
         $reader->shutdownObject();
     }

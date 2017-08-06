@@ -64,7 +64,7 @@ class NumberParser
      * @return mixed Parsed float number or FALSE on failure
      * @api
      */
-    public function parseNumberWithCustomPattern($numberToParse, $format, Locale $locale, $strictMode = true)
+    public function parseNumberWithCustomPattern(string $numberToParse, string $format, Locale $locale, bool $strictMode = true)
     {
         return $this->doParsingWithParsedFormat($numberToParse, $this->numbersReader->parseCustomFormat($format), $this->numbersReader->getLocalizedSymbolsForLocale($locale), $strictMode);
     }
@@ -79,7 +79,7 @@ class NumberParser
      * @return mixed Parsed float number or FALSE on failure
      * @api
      */
-    public function parseDecimalNumber($numberToParse, Locale $locale, $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT, $strictMode = true)
+    public function parseDecimalNumber(string $numberToParse, Locale $locale, string $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT, bool $strictMode = true)
     {
         NumbersReader::validateFormatLength($formatLength);
         return $this->doParsingWithParsedFormat($numberToParse, $this->numbersReader->parseFormatFromCldr($locale, NumbersReader::FORMAT_TYPE_DECIMAL, $formatLength), $this->numbersReader->getLocalizedSymbolsForLocale($locale), $strictMode);
@@ -95,7 +95,7 @@ class NumberParser
      * @return mixed Parsed float number or FALSE on failure
      * @api
      */
-    public function parsePercentNumber($numberToParse, Locale $locale, $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT, $strictMode = true)
+    public function parsePercentNumber(string $numberToParse, Locale $locale, string $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT, bool $strictMode = true)
     {
         NumbersReader::validateFormatLength($formatLength);
         return $this->doParsingWithParsedFormat($numberToParse, $this->numbersReader->parseFormatFromCldr($locale, NumbersReader::FORMAT_TYPE_PERCENT, $formatLength), $this->numbersReader->getLocalizedSymbolsForLocale($locale), $strictMode);
@@ -110,7 +110,7 @@ class NumberParser
      * @param boolean $strictMode Work mode (strict when TRUE, lenient when FALSE)
      * @return mixed Parsed float number or FALSE on failure
      */
-    protected function doParsingWithParsedFormat($numberToParse, array $parsedFormat, array $localizedSymbols, $strictMode)
+    protected function doParsingWithParsedFormat(string $numberToParse, array $parsedFormat, array $localizedSymbols, bool $strictMode)
     {
         return ($strictMode) ? $this->doParsingInStrictMode($numberToParse, $parsedFormat, $localizedSymbols) : $this->doParsingInLenientMode($numberToParse, $parsedFormat, $localizedSymbols);
     }
@@ -126,7 +126,7 @@ class NumberParser
      * @param array $localizedSymbols An array with symbols to use
      * @return mixed Parsed float number or FALSE on failure
      */
-    protected function doParsingInStrictMode($numberToParse, array $parsedFormat, array $localizedSymbols)
+    protected function doParsingInStrictMode(string $numberToParse, array $parsedFormat, array $localizedSymbols)
     {
         $numberIsNegative = false;
 
@@ -243,7 +243,7 @@ class NumberParser
      * @param array $localizedSymbols An array with symbols to use
      * @return mixed Parsed float number or FALSE on failure
      */
-    protected function doParsingInLenientMode($numberToParse, array $parsedFormat, array $localizedSymbols)
+    protected function doParsingInLenientMode(string $numberToParse, array $parsedFormat, array $localizedSymbols)
     {
         $numberIsNegative = false;
         $positionOfFirstDigit = null;

@@ -33,15 +33,15 @@ class TranslationHelper implements ProtectedContextAwareInterface
      * translated label.
      *
      * @param string $id Id to use for finding translation (trans-unit id in XLIFF)
-     * @param string $originalLabel The original translation value (the untranslated source string).
+     * @param string|null $originalLabel The original translation value (the untranslated source string).
      * @param array $arguments Numerically indexed array of values to be inserted into placeholders
      * @param string $source Name of file with translations
-     * @param string $package Target package key. If not set, the current package key will be used
-     * @param mixed $quantity A number to find plural form for (float or int), NULL to not use plural forms
-     * @param string $locale An identifier of locale to use (NULL for use the default locale)
+     * @param string|null $package Target package key. If not set, the current package key will be used
+     * @param float|int|null $quantity A number to find plural form for (float or int), NULL to not use plural forms
+     * @param string|null $locale An identifier of locale to use (NULL for use the default locale)
      * @return string Translated label or source label / ID key
      */
-    public function translate($id, $originalLabel = null, array $arguments = [], $source = 'Main', $package = null, $quantity = null, $locale = null)
+    public function translate(string $id, string $originalLabel = null, array $arguments = [], string $source = 'Main', string $package = null, float $quantity = null, string $locale = null): string
     {
         if (
             $originalLabel === null &&
@@ -63,7 +63,7 @@ class TranslationHelper implements ProtectedContextAwareInterface
      * @param string $id Id to use for finding translation (trans-unit id in XLIFF)
      * @return TranslationParameterToken
      */
-    public function id($id)
+    public function id(string $id): TranslationParameterToken
     {
         return $this->createTranslationParameterToken($id);
     }
@@ -74,7 +74,7 @@ class TranslationHelper implements ProtectedContextAwareInterface
      * @param string $value
      * @return TranslationParameterToken
      */
-    public function value($value)
+    public function value(string $value): TranslationParameterToken
     {
         return $this->createTranslationParameterToken(null, $value);
     }
@@ -85,7 +85,7 @@ class TranslationHelper implements ProtectedContextAwareInterface
      * @param string $methodName
      * @return boolean
      */
-    public function allowsCallOfMethod($methodName)
+    public function allowsCallOfMethod($methodName): bool
     {
         return true;
     }
@@ -98,15 +98,15 @@ class TranslationHelper implements ProtectedContextAwareInterface
      * translated label.
      *
      * @param string $id Id to use for finding translation (trans-unit id in XLIFF)
-     * @param string $originalLabel The original translation value (the untranslated source string).
+     * @param string|null $originalLabel The original translation value (the untranslated source string).
      * @param array $arguments Numerically indexed array of values to be inserted into placeholders
      * @param string $source Name of file with translations
-     * @param string $package Target package key. If not set, the current package key will be used
-     * @param mixed $quantity A number to find plural form for (float or int), NULL to not use plural forms
-     * @param string $locale An identifier of locale to use (NULL for use the default locale)
+     * @param string|null $package Target package key. If not set, the current package key will be used
+     * @param float|int|null $quantity A number to find plural form for (float or int), NULL to not use plural forms
+     * @param string|null $locale An identifier of locale to use (NULL for use the default locale)
      * @return string Translated label or source label / ID key
      */
-    protected function translateByExplicitlyPassedOrderedArguments($id, $originalLabel = null, array $arguments = [], $source = 'Main', $package = null, $quantity = null, $locale = null)
+    protected function translateByExplicitlyPassedOrderedArguments(string $id, string $originalLabel = null, array $arguments = [], string $source = 'Main', string $package = null, float $quantity = null, string $locale = null): string
     {
         $translationParameterToken = $this->createTranslationParameterToken($id);
         $translationParameterToken
@@ -130,7 +130,7 @@ class TranslationHelper implements ProtectedContextAwareInterface
      * @return string Translated label or source label / ID key
      * @throws \InvalidArgumentException
      */
-    protected function translateByShortHandString($shortHandString)
+    protected function translateByShortHandString(string $shortHandString): string
     {
         $shortHandStringParts = explode(':', $shortHandString);
         if (count($shortHandStringParts) === 3) {
@@ -147,11 +147,11 @@ class TranslationHelper implements ProtectedContextAwareInterface
     /**
      * Create and return a TranslationParameterToken.
      *
-     * @param string $id
-     * @param string $originalLabel
+     * @param string|null $id
+     * @param string|null $originalLabel
      * @return TranslationParameterToken
      */
-    protected function createTranslationParameterToken($id = null, $originalLabel = null)
+    protected function createTranslationParameterToken(string $id = null, string $originalLabel = null): TranslationParameterToken
     {
         return new TranslationParameterToken($id, $originalLabel);
     }

@@ -52,7 +52,7 @@ class DatetimeFormatter implements FormatterInterface
      * @return string String representation of $value provided, or (string)$value
      * @api
      */
-    public function format($value, Locale $locale, array $styleProperties = [])
+    public function format($value, Locale $locale, array $styleProperties = []): string
     {
         if (isset($styleProperties[0])) {
             $formatType = $styleProperties[0];
@@ -94,7 +94,7 @@ class DatetimeFormatter implements FormatterInterface
      * @api
      * @see \Neos\Flow\I18n\Cldr\Reader\DatesReader
      */
-    public function formatDateTimeWithCustomPattern(\DateTimeInterface $dateTime, $format, Locale $locale)
+    public function formatDateTimeWithCustomPattern(\DateTimeInterface $dateTime, string $format, Locale $locale): string
     {
         return $this->doFormattingWithParsedFormat($dateTime, $this->datesReader->parseCustomFormat($format), $this->datesReader->getLocalizedLiteralsForLocale($locale));
     }
@@ -109,7 +109,7 @@ class DatetimeFormatter implements FormatterInterface
      * @return string Formatted date
      * @api
      */
-    public function formatDate(\DateTimeInterface $date, Locale $locale, $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT)
+    public function formatDate(\DateTimeInterface $date, Locale $locale, string $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT): string
     {
         DatesReader::validateFormatLength($formatLength);
         return $this->doFormattingWithParsedFormat($date, $this->datesReader->parseFormatFromCldr($locale, DatesReader::FORMAT_TYPE_DATE, $formatLength), $this->datesReader->getLocalizedLiteralsForLocale($locale));
@@ -125,7 +125,7 @@ class DatetimeFormatter implements FormatterInterface
      * @return string Formatted time
      * @api
      */
-    public function formatTime(\DateTimeInterface $time, Locale $locale, $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT)
+    public function formatTime(\DateTimeInterface $time, Locale $locale, string $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT): string
     {
         DatesReader::validateFormatLength($formatLength);
         return $this->doFormattingWithParsedFormat($time, $this->datesReader->parseFormatFromCldr($locale, DatesReader::FORMAT_TYPE_TIME, $formatLength), $this->datesReader->getLocalizedLiteralsForLocale($locale));
@@ -144,7 +144,7 @@ class DatetimeFormatter implements FormatterInterface
      * @return string Formatted date and time
      * @api
      */
-    public function formatDateTime(\DateTimeInterface $dateTime, Locale $locale, $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT)
+    public function formatDateTime(\DateTimeInterface $dateTime, Locale $locale, string $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT): string
     {
         DatesReader::validateFormatLength($formatLength);
         return $this->doFormattingWithParsedFormat($dateTime, $this->datesReader->parseFormatFromCldr($locale, DatesReader::FORMAT_TYPE_DATETIME, $formatLength), $this->datesReader->getLocalizedLiteralsForLocale($locale));
@@ -161,7 +161,7 @@ class DatetimeFormatter implements FormatterInterface
      * @param array $localizedLiterals An array with literals to use (as in $localizedLiterals property)
      * @return string Formatted date / time
      */
-    protected function doFormattingWithParsedFormat(\DateTimeInterface $dateTime, array $parsedFormat, array $localizedLiterals)
+    protected function doFormattingWithParsedFormat(\DateTimeInterface $dateTime, array $parsedFormat, array $localizedLiterals): string
     {
         $formattedDateTime = '';
 
@@ -196,7 +196,7 @@ class DatetimeFormatter implements FormatterInterface
      * @throws InvalidArgumentException When $subformat use symbol that is not recognized
      * @see \Neos\Flow\I18n\Cldr\Reader\DatesReader
      */
-    protected function doFormattingForSubpattern(\DateTimeInterface $dateTime, $subformat, array $localizedLiterals)
+    protected function doFormattingForSubpattern(\DateTimeInterface $dateTime, string $subformat, array $localizedLiterals): string
     {
         $formatLengthOfSubformat = strlen($subformat);
 
@@ -228,9 +228,9 @@ class DatetimeFormatter implements FormatterInterface
             case 'd':
                 return $this->padString($dateTime->format('j'), $formatLengthOfSubformat);
             case 'D':
-                return $this->padString((int)($dateTime->format('z') + 1), $formatLengthOfSubformat);
+                return $this->padString((int)($dateTime->format('z')) + 1, $formatLengthOfSubformat);
             case 'F':
-                return (int)(($dateTime->format('j') + 6) / 7);
+                return (int)(((int)$dateTime->format('j') + 6) / 7);
             case 'M':
             case 'L':
                 $month = (int)$dateTime->format('n');
@@ -313,7 +313,7 @@ class DatetimeFormatter implements FormatterInterface
      * @param int $formatLength
      * @return string Padded string (can be unchanged if $formatLength is lower than length of string)
      */
-    protected function padString($string, $formatLength)
+    protected function padString(string $string, int $formatLength): string
     {
         return str_pad($string, $formatLength, '0', \STR_PAD_LEFT);
     }

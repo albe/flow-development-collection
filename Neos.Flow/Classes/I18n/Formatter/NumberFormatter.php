@@ -46,7 +46,7 @@ class NumberFormatter implements FormatterInterface
      * @return string String representation of $value provided, or (string)$value
      * @api
      */
-    public function format($value, Locale $locale, array $styleProperties = [])
+    public function format($value, Locale $locale, array $styleProperties = []): string
     {
         if (isset($styleProperties[0])) {
             $formatType = $styleProperties[0];
@@ -72,13 +72,13 @@ class NumberFormatter implements FormatterInterface
      * Format is remembered in this classes cache and won't be parsed again for
      * some time.
      *
-     * @param mixed $number Float or int, can be negative, can be NaN or infinite
+     * @param float|int $number Float or int, can be negative, can be NaN or infinite
      * @param string $format Format string
      * @param Locale $locale A locale used for finding symbols array
      * @return string Formatted number. Will return string-casted version of $number if pattern is not valid / supported
      * @api
      */
-    public function formatNumberWithCustomPattern($number, $format, Locale $locale)
+    public function formatNumberWithCustomPattern(float $number, string $format, Locale $locale): string
     {
         return $this->doFormattingWithParsedFormat($number, $this->numbersReader->parseCustomFormat($format), $this->numbersReader->getLocalizedSymbolsForLocale($locale));
     }
@@ -90,13 +90,13 @@ class NumberFormatter implements FormatterInterface
      * Note: currently length is not used in decimalFormats from CLDR.
      * But it's defined in the specification, so we support it here.
      *
-     * @param mixed $number Float or int, can be negative, can be NaN or infinite
+     * @param float|int $number Float or int, can be negative, can be NaN or infinite
      * @param Locale $locale
      * @param string $formatLength One of NumbersReader FORMAT_LENGTH constants
      * @return string Formatted number. Will return string-casted version of $number if there is no pattern for given $locale / $formatLength
      * @api
      */
-    public function formatDecimalNumber($number, Locale $locale, $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT)
+    public function formatDecimalNumber(float $number, Locale $locale, string $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT): string
     {
         NumbersReader::validateFormatLength($formatLength);
         return $this->doFormattingWithParsedFormat($number, $this->numbersReader->parseFormatFromCldr($locale, NumbersReader::FORMAT_TYPE_DECIMAL, $formatLength), $this->numbersReader->getLocalizedSymbolsForLocale($locale));
@@ -109,13 +109,13 @@ class NumberFormatter implements FormatterInterface
      * Note: currently length is not used in percentFormats from CLDR.
      * But it's defined in the specification, so we support it here.
      *
-     * @param mixed $number Float or int, can be negative, can be NaN or infinite
+     * @param float|int $number Float or int, can be negative, can be NaN or infinite
      * @param Locale $locale
      * @param string $formatLength One of NumbersReader FORMAT_LENGTH constants
      * @return string Formatted number. Will return string-casted version of $number if there is no pattern for given $locale / $formatLength
      * @api
      */
-    public function formatPercentNumber($number, Locale $locale, $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT)
+    public function formatPercentNumber(float $number, Locale $locale, string $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT): string
     {
         NumbersReader::validateFormatLength($formatLength);
         return $this->doFormattingWithParsedFormat($number, $this->numbersReader->parseFormatFromCldr($locale, NumbersReader::FORMAT_TYPE_PERCENT, $formatLength), $this->numbersReader->getLocalizedSymbolsForLocale($locale));
@@ -130,14 +130,14 @@ class NumberFormatter implements FormatterInterface
      * Note: currently length is not used in currencyFormats from CLDR.
      * But it's defined in the specification, so we support it here.
      *
-     * @param mixed $number Float or int, can be negative, can be NaN or infinite
+     * @param float|int $number Float or int, can be negative, can be NaN or infinite
      * @param Locale $locale
      * @param string $currency Currency symbol (or name)
      * @param string $formatLength One of NumbersReader FORMAT_LENGTH constants
      * @return string Formatted number. Will return string-casted version of $number if there is no pattern for given $locale / $formatLength
      * @api
      */
-    public function formatCurrencyNumber($number, Locale $locale, $currency, $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT)
+    public function formatCurrencyNumber(float $number, Locale $locale, string $currency = null, string $formatLength = NumbersReader::FORMAT_LENGTH_DEFAULT): string
     {
         NumbersReader::validateFormatLength($formatLength);
         return $this->doFormattingWithParsedFormat($number, $this->numbersReader->parseFormatFromCldr($locale, NumbersReader::FORMAT_TYPE_CURRENCY, $formatLength), $this->numbersReader->getLocalizedSymbolsForLocale($locale), $currency);
@@ -153,13 +153,13 @@ class NumberFormatter implements FormatterInterface
      * If $number is NaN or infinite, proper localized symbol will be returned,
      * as defined in CLDR specification.
      *
-     * @param mixed $number Float or int, can be negative, can be NaN or infinite
+     * @param float|int $number Float or int, can be negative, can be NaN or infinite
      * @param array $parsedFormat An array describing format (as in $parsedFormats property)
      * @param array $symbols An array with symbols to use (as in $localeSymbols property)
      * @param string $currency Currency symbol to be inserted into formatted number (if applicable)
      * @return string Formatted number. Will return string-casted version of $number if pattern is FALSE
      */
-    protected function doFormattingWithParsedFormat($number, array $parsedFormat, array $symbols, $currency = null)
+    protected function doFormattingWithParsedFormat(float $number, array $parsedFormat, array $symbols, string $currency = null): string
     {
         if ($parsedFormat === false) {
             return (string)$number;

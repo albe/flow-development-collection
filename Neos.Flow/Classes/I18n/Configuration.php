@@ -40,7 +40,7 @@ class Configuration
      * @param string $defaultLocaleIdentifier
      * @throws Exception\InvalidLocaleIdentifierException
      */
-    public function __construct($defaultLocaleIdentifier)
+    public function __construct(string $defaultLocaleIdentifier)
     {
         try {
             $this->defaultLocale = new Locale($defaultLocaleIdentifier);
@@ -54,7 +54,7 @@ class Configuration
      *
      * @return Locale
      */
-    public function getDefaultLocale()
+    public function getDefaultLocale(): Locale
     {
         return $this->defaultLocale;
     }
@@ -77,7 +77,7 @@ class Configuration
      *
      * @return Locale
      */
-    public function getCurrentLocale()
+    public function getCurrentLocale(): Locale
     {
         if (!$this->currentLocale instanceof Locale
             || $this->currentLocale->getLanguage() === 'mul') {
@@ -122,7 +122,7 @@ class Configuration
      * @return array
      * @see setFallbackRule()
      */
-    public function getFallbackRule()
+    public function getFallbackRule(): array
     {
         return $this->fallbackRule;
     }

@@ -130,7 +130,7 @@ class CldrModel
      * @return mixed Array or string of matching data, or FALSE on failure
      * @see CldrParser
      */
-    public function getRawData($path)
+    public function getRawData(string $path)
     {
         if ($path === '/') {
             return $this->parsedData;
@@ -161,7 +161,7 @@ class CldrModel
      * @see CldrParser
      * @see CldrModel::getRawData()
      */
-    public function getRawArray($path)
+    public function getRawArray(string $path)
     {
         $data = $this->getRawData($path);
 
@@ -180,15 +180,14 @@ class CldrModel
      * @param string $path A path to the element to get
      * @return mixed String with desired element, or FALSE on failure
      */
-    public function getElement($path)
+    public function getElement(string $path)
     {
         $data = $this->getRawData($path);
 
         if (is_array($data)) {
             return false;
-        } else {
-            return $data;
         }
+        return $data;
     }
 
     /**
@@ -198,7 +197,7 @@ class CldrModel
      * @param string $nodeName A name of the nodes to return
      * @return mixed String with desired element, or FALSE on failure
      */
-    public function findNodesWithinPath($path, $nodeName)
+    public function findNodesWithinPath(string $path, string $nodeName)
     {
         $data = $this->getRawArray($path);
 
@@ -226,7 +225,7 @@ class CldrModel
      * @param string $nodeString String with node name and optional attribute(s)
      * @return string Name of the node
      */
-    public static function getNodeName($nodeString)
+    public static function getNodeName(string $nodeString): string
     {
         $positionOfFirstAttribute = strpos($nodeString, '[@');
 
@@ -255,7 +254,7 @@ class CldrModel
      * @param string $attributeName Name of the attribute to find
      * @return mixed Value of desired attribute, or FALSE if there is no such attribute
      */
-    public static function getAttributeValue($nodeString, $attributeName)
+    public static function getAttributeValue(string $nodeString, string $attributeName)
     {
         $attributeName = '[@' . $attributeName . '="';
         $positionOfAttributeName = strpos($nodeString, $attributeName);
@@ -276,7 +275,7 @@ class CldrModel
      * @param array<string> $sourcePaths Absolute paths to CLDR files (can be one file)
      * @return array Parsed and merged data
      */
-    protected function parseFiles(array $sourcePaths)
+    protected function parseFiles(array $sourcePaths): array
     {
         $parsedFiles = [];
 
@@ -304,13 +303,13 @@ class CldrModel
      * @param mixed $secondParsedData Part of data from second file (either array or string)
      * @return array Data merged from two files
      */
-    protected function mergeTwoParsedFiles($firstParsedData, $secondParsedData)
+    protected function mergeTwoParsedFiles($firstParsedData, $secondParsedData): array
     {
         $mergedData = $firstParsedData;
 
         if (is_array($secondParsedData)) {
             foreach ($secondParsedData as $nodeString => $children) {
-                if (isset($firstParsedData[$nodeString])) {
+                if (isset($firstParsedData[$nodeString]) && !is_string($children)) {
                     $mergedData[$nodeString] = $this->mergeTwoParsedFiles($firstParsedData[$nodeString], $children);
                 } else {
                     $mergedData[$nodeString] = $children;
@@ -335,39 +334,40 @@ class CldrModel
      * @return mixed Modified (or unchanged) $data
      * @throws Exception\InvalidCldrDataException When found alias tag which has unexpected structure
      */
-    protected function resolveAliases($data, $currentPath)
+    protected function resolveAliases($data, string $currentPath)
     {
         if (!is_array($data)) {
             return $data;
         }
 
         foreach ($data as $nodeString => $nodeChildren) {
-            if (self::getNodeName($nodeString) === 'alias') {
-                if (self::getAttributeValue($nodeString, 'source') !== 'locale') {
-                    // Value of source attribute can be 'locale' or particular locale identifier, but we do not support the second mode, ignore it silently
-                    break;
-                }
-
-                $sourcePath = self::getAttributeValue($nodeString, 'path');
-
-                // Change relative path to absolute one
-                $sourcePath = str_replace('../', '', $sourcePath, $countOfJumpsToParentNode);
-                $sourcePath = str_replace('\'', '"', $sourcePath);
-                $currentPathNodeNames = explode('/', $currentPath);
-                for ($i = 0; $i < $countOfJumpsToParentNode; ++$i) {
-                    unset($currentPathNodeNames[count($currentPathNodeNames) - 1]);
-                }
-                $sourcePath = implode('/', $currentPathNodeNames) . '/' . $sourcePath;
-
-                unset($data[$nodeString]);
-                $sourceData = $this->getRawData($sourcePath);
-                if (is_array($sourceData)) {
-                    $data = array_merge($sourceData, $data);
-                }
-                break;
-            } else {
+            if (self::getNodeName($nodeString) !== 'alias') {
                 $data[$nodeString] = $this->resolveAliases($data[$nodeString], ($currentPath === '') ? $nodeString : ($currentPath . '/' . $nodeString));
+                continue;
             }
+
+            if (self::getAttributeValue($nodeString, 'source') !== 'locale') {
+                // Value of source attribute can be 'locale' or particular locale identifier, but we do not support the second mode, ignore it silently
+                break;
+            }
+
+            $sourcePath = self::getAttributeValue($nodeString, 'path');
+
+            // Change relative path to absolute one
+            $sourcePath = str_replace('../', '', $sourcePath, $countOfJumpsToParentNode);
+            $sourcePath = str_replace('\'', '"', $sourcePath);
+            $currentPathNodeNames = explode('/', $currentPath);
+            for ($i = 0; $i < $countOfJumpsToParentNode; ++$i) {
+                unset($currentPathNodeNames[count($currentPathNodeNames) - 1]);
+            }
+            $sourcePath = implode('/', $currentPathNodeNames) . '/' . $sourcePath;
+
+            unset($data[$nodeString]);
+            $sourceData = $this->getRawData($sourcePath);
+            if (is_array($sourceData)) {
+                $data = array_merge($sourceData, $data);
+            }
+            break;
         }
 
         return $data;

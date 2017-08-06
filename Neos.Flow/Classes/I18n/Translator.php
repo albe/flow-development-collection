@@ -192,7 +192,7 @@ class Translator
      *
      * @param mixed $quantity
      * @param Locale $locale
-     * @return string
+     * @return string|null
      */
     protected function getPluralForm($quantity, Locale $locale)
     {

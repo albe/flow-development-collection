@@ -218,7 +218,7 @@ class NumbersReader
      * @return array An array representing parsed format
      * @throws Exception\UnableToFindFormatException When there is no proper format string in CLDR
      */
-    public function parseFormatFromCldr(Locale $locale, $formatType, $formatLength = self::FORMAT_LENGTH_DEFAULT)
+    public function parseFormatFromCldr(Locale $locale, string $formatType, string $formatLength = self::FORMAT_LENGTH_DEFAULT): array
     {
         self::validateFormatType($formatType);
         self::validateFormatLength($formatLength);
@@ -252,7 +252,7 @@ class NumbersReader
      * @param string $format Format string to parse
      * @return array An array representing parsed format
      */
-    public function parseCustomFormat($format)
+    public function parseCustomFormat(string $format): array
     {
         if (isset($this->parsedFormats[$format])) {
             return $this->parsedFormats[$format];
@@ -273,7 +273,7 @@ class NumbersReader
      * @param Locale $locale
      * @return array Symbols array
      */
-    public function getLocalizedSymbolsForLocale(Locale $locale)
+    public function getLocalizedSymbolsForLocale(Locale $locale): array
     {
         if (isset($this->localizedSymbols[(string)$locale])) {
             return $this->localizedSymbols[(string)$locale];
@@ -291,7 +291,7 @@ class NumbersReader
      * @return void
      * @throws Exception\InvalidFormatTypeException When value is unallowed
      */
-    public static function validateFormatType($formatType)
+    public static function validateFormatType(string $formatType)
     {
         if (!in_array($formatType, [self::FORMAT_TYPE_DECIMAL, self::FORMAT_TYPE_PERCENT, self::FORMAT_TYPE_CURRENCY])) {
             throw new Exception\InvalidFormatTypeException('Provided formatType, "' . $formatType . '", is not one of allowed values.', 1281439179);
@@ -304,9 +304,9 @@ class NumbersReader
      *
      * @param string $formatLength
      * @return void
-     * @throws Exception\InvalidFormatLengthException When value is unallowed
+     * @throws Exception\InvalidFormatLengthException When value is not allowed
      */
-    public static function validateFormatLength($formatLength)
+    public static function validateFormatLength(string $formatLength)
     {
         if (!in_array($formatLength, [self::FORMAT_LENGTH_DEFAULT, self::FORMAT_LENGTH_FULL, self::FORMAT_LENGTH_LONG, self::FORMAT_LENGTH_MEDIUM, self::FORMAT_LENGTH_SHORT])) {
             throw new Exception\InvalidFormatLengthException('Provided formatLength, "' . $formatLength . '", is not one of allowed values.', 1281439180);
@@ -324,7 +324,7 @@ class NumbersReader
      * @throws Exception\UnsupportedNumberFormatException When unsupported format characters encountered
      * @see NumbersReader::$parsedFormats
      */
-    protected function parseFormat($format)
+    protected function parseFormat(string $format): array
     {
         foreach (['E', '@', '*', '\''] as $unsupportedFeature) {
             if (strpos($format, $unsupportedFeature) !== false) {

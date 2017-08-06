@@ -39,7 +39,7 @@ class XliffParser extends AbstractXmlParser
      * @throws Exception\InvalidXliffDataException
      * @todo Support "approved" attribute
      */
-    protected function doParsingFromRoot(\SimpleXMLElement $root)
+    protected function doParsingFromRoot(\SimpleXMLElement $root): array
     {
         $parsedData = [
             'sourceLocale' => new Locale((string)$root->file['source-language'])

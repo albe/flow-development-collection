@@ -35,7 +35,7 @@ abstract class AbstractXmlParser
      * @param string $sourcePath An absolute path to XML file
      * @return array Parsed XML file
      */
-    public function getParsedData($sourcePath)
+    public function getParsedData(string $sourcePath): array
     {
         if (!isset($this->parsedFiles[$sourcePath])) {
             $this->parsedFiles[$sourcePath] = $this->parseXmlFile($sourcePath);
@@ -50,7 +50,7 @@ abstract class AbstractXmlParser
      * @return array Parsed XML file
      * @throws Exception\InvalidXmlFileException When SimpleXML couldn't load XML file
      */
-    protected function parseXmlFile($sourcePath)
+    protected function parseXmlFile(string $sourcePath): array
     {
         if (!file_exists($sourcePath)) {
             throw new Exception\InvalidXmlFileException('The path "' . $sourcePath . '" does not point to an existing and accessible XML file.', 1328879703);
@@ -78,5 +78,5 @@ abstract class AbstractXmlParser
      * @param \SimpleXMLElement $root A root node
      * @return array An array representing parsed XML file (structure depends on concrete parser)
      */
-    abstract protected function doParsingFromRoot(\SimpleXMLElement $root);
+    abstract protected function doParsingFromRoot(\SimpleXMLElement $root): array;
 }

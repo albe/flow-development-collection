@@ -68,7 +68,7 @@ class DatetimeParser
      * @api
      * @see DatesReader
      */
-    public function parseDatetimeWithCustomPattern($datetimeToParse, $format, I18n\Locale $locale, $strictMode = true)
+    public function parseDatetimeWithCustomPattern(string $datetimeToParse, string $format, I18n\Locale $locale, bool $strictMode = true)
     {
         return $this->doParsingWithParsedFormat($datetimeToParse, $this->datesReader->parseCustomFormat($format), $this->datesReader->getLocalizedLiteralsForLocale($locale), $strictMode);
     }
@@ -84,7 +84,7 @@ class DatetimeParser
      * @return mixed Array of parsed date elements, FALSE on failure
      * @api
      */
-    public function parseDate($dateToParse, I18n\Locale $locale, $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT, $strictMode = true)
+    public function parseDate(string $dateToParse, I18n\Locale $locale, string $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT, bool $strictMode = true)
     {
         DatesReader::validateFormatLength($formatLength);
         return $this->doParsingWithParsedFormat($dateToParse, $this->datesReader->parseFormatFromCldr($locale, DatesReader::FORMAT_TYPE_DATE, $formatLength), $this->datesReader->getLocalizedLiteralsForLocale($locale), $strictMode);
@@ -101,7 +101,7 @@ class DatetimeParser
      * @return mixed Array of parsed time elements, FALSE on failure
      * @api
      */
-    public function parseTime($timeToParse, I18n\Locale $locale, $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT, $strictMode = true)
+    public function parseTime(string $timeToParse, I18n\Locale $locale, string $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT, bool $strictMode = true)
     {
         DatesReader::validateFormatLength($formatLength);
         return $this->doParsingWithParsedFormat($timeToParse, $this->datesReader->parseFormatFromCldr($locale, DatesReader::FORMAT_TYPE_TIME, $formatLength), $this->datesReader->getLocalizedLiteralsForLocale($locale), $strictMode);
@@ -117,7 +117,7 @@ class DatetimeParser
      * @param boolean $strictMode Work mode (strict when TRUE, lenient when FALSE)
      * @return mixed Array of parsed date and time elements, FALSE on failure
      */
-    public function parseDateAndTime($dateAndTimeToParse, I18n\Locale $locale, $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT, $strictMode = true)
+    public function parseDateAndTime(string $dateAndTimeToParse, I18n\Locale $locale, string $formatLength = DatesReader::FORMAT_LENGTH_DEFAULT, bool $strictMode = true)
     {
         DatesReader::validateFormatLength($formatLength);
         return $this->doParsingWithParsedFormat($dateAndTimeToParse, $this->datesReader->parseFormatFromCldr($locale, DatesReader::FORMAT_TYPE_DATETIME, $formatLength), $this->datesReader->getLocalizedLiteralsForLocale($locale), $strictMode);
@@ -132,7 +132,7 @@ class DatetimeParser
      * @param boolean $strictMode Work mode (strict when TRUE, lenient when FALSE)
      * @return mixed Array of parsed date and / or time elements, FALSE on failure
      */
-    protected function doParsingWithParsedFormat($datetimeToParse, array $parsedFormat, array $localizedLiterals, $strictMode)
+    protected function doParsingWithParsedFormat(string $datetimeToParse, array $parsedFormat, array $localizedLiterals, bool $strictMode)
     {
         return ($strictMode) ? $this->doParsingInStrictMode($datetimeToParse, $parsedFormat, $localizedLiterals) : $this->doParsingInLenientMode($datetimeToParse, $parsedFormat, $localizedLiterals);
     }
@@ -143,11 +143,11 @@ class DatetimeParser
      * @param string $datetimeToParse Date/time to be parsed
      * @param array $parsedFormat Format parsed by DatesReader
      * @param array $localizedLiterals Array of date / time literals from CLDR
-     * @return array Array of parsed date and / or time elements, FALSE on failure
+     * @return array|false Array of parsed date and / or time elements, FALSE on failure
      * @throws InvalidArgumentException When unexpected symbol found in format
      * @see DatesReader
      */
-    protected function doParsingInStrictMode($datetimeToParse, array $parsedFormat, array $localizedLiterals)
+    protected function doParsingInStrictMode(string $datetimeToParse, array $parsedFormat, array $localizedLiterals)
     {
         $datetimeElements = [
             'year' => null,
@@ -348,7 +348,7 @@ class DatetimeParser
      * @throws InvalidArgumentException When unexpected symbol found in format
      * @see DatesReader
      */
-    protected function doParsingInLenientMode($datetimeToParse, array $parsedFormat, array $localizedLiterals)
+    protected function doParsingInLenientMode(string $datetimeToParse, array $parsedFormat, array $localizedLiterals): array
     {
         $datetimeElements = [
             'year' => null,
@@ -588,7 +588,7 @@ class DatetimeParser
      * @return int Parsed number
      * @throws Exception\InvalidParseStringException When string cannot be parsed or number does not conforms constraints
      */
-    protected function extractAndCheckNumber($datetimeToParse, $isTwoDigits, $minValue, $maxValue)
+    protected function extractAndCheckNumber(string $datetimeToParse, bool $isTwoDigits, int $minValue, int $maxValue): int
     {
         if ($isTwoDigits || is_numeric($datetimeToParse[1])) {
             $number = substr($datetimeToParse, 0, 2);
@@ -618,7 +618,7 @@ class DatetimeParser
      * @return string Extracted number
      * @throws Exception\InvalidParseStringException When no digit found in string
      */
-    protected function extractNumberAndGetPosition($datetimeToParse, &$position)
+    protected function extractNumberAndGetPosition(string $datetimeToParse, int &$position): string
     {
         $characters = str_split($datetimeToParse);
 

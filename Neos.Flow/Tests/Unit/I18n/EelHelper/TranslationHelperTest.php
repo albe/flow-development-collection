@@ -102,13 +102,14 @@ class TranslationHelperTest extends UnitTestCase
      */
     public function idReturnsTranslationParameterTokenWithPreconfiguredId()
     {
+        $mockTranslationParameterToken = $this->createMock(TranslationParameterToken::class);
         $mockTranslationHelper = $this->getMockBuilder(TranslationHelper::class)->setMethods(['createTranslationParameterToken'])->getMock();
         $mockTranslationHelper->expects(static::once())
             ->method('createTranslationParameterToken', 'SomeId')
-            ->willReturn('TranslationParameterTokenWithPreconfiguredId');
+            ->willReturn($mockTranslationParameterToken);
 
         $result = $mockTranslationHelper->id('SomeId');
-        $this->assertEquals('TranslationParameterTokenWithPreconfiguredId', $result);
+        $this->assertEquals($mockTranslationParameterToken, $result);
     }
 
     /**
@@ -116,12 +117,13 @@ class TranslationHelperTest extends UnitTestCase
      */
     public function valueReturnsTranslationParameterTokenWithPreconfiguredValue()
     {
+        $mockTranslationParameterToken = $this->createMock(TranslationParameterToken::class);
         $mockTranslationHelper = $this->getMockBuilder(TranslationHelper::class)->setMethods(['createTranslationParameterToken'])->getMock();
         $mockTranslationHelper->expects(static::once())
             ->method('createTranslationParameterToken', null, 'SomeValue')
-            ->willReturn('TranslationParameterTokenWithPreconfiguredValue');
+            ->willReturn($mockTranslationParameterToken);
 
         $result = $mockTranslationHelper->value('SomeValue');
-        $this->assertEquals('TranslationParameterTokenWithPreconfiguredValue', $result);
+        $this->assertEquals($mockTranslationParameterToken, $result);
     }
 }

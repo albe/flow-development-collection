@@ -126,7 +126,7 @@ class XliffModel
      * @param integer $pluralFormIndex Index of plural form to use (starts with 0)
      * @return mixed Translated label or FALSE on failure
      */
-    public function getTargetBySource($source, $pluralFormIndex = 0)
+    public function getTargetBySource(string $source, int $pluralFormIndex = 0)
     {
         if (!isset($this->xmlParsedData['translationUnits'])) {
             $this->i18nLogger->log(sprintf('No trans-unit elements were found in "%s". This is allowed per specification, but no translation can be applied then.', $this->sourcePath), LOG_DEBUG);
@@ -158,7 +158,7 @@ class XliffModel
      * @param integer $pluralFormIndex Index of plural form to use (starts with 0)
      * @return mixed Translated label or FALSE on failure
      */
-    public function getTargetByTransUnitId($transUnitId, $pluralFormIndex = 0)
+    public function getTargetByTransUnitId(string $transUnitId, int $pluralFormIndex = 0)
     {
         if (!isset($this->xmlParsedData['translationUnits'][$transUnitId])) {
             $this->i18nLogger->log('No trans-unit element with the id "' . $transUnitId . '" was found in ' . $this->sourcePath . '. Either this translation has been removed or the id in the code or template referring to the translation is wrong.', LOG_DEBUG);

@@ -44,7 +44,7 @@ class Utility
      * @param string $acceptLanguageHeader
      * @return mixed The array of locale identifiers or FALSE
      */
-    public static function parseAcceptLanguageHeader($acceptLanguageHeader)
+    public static function parseAcceptLanguageHeader(string $acceptLanguageHeader)
     {
         $acceptLanguageHeader = str_replace(' ', '', $acceptLanguageHeader);
         $matchingLanguages = [];
@@ -91,7 +91,7 @@ class Utility
      * @param string $filename Filename to extract locale identifier from
      * @return mixed The string with extracted locale identifier of FALSE on failure
      */
-    public static function extractLocaleTagFromFilename($filename)
+    public static function extractLocaleTagFromFilename(string $filename)
     {
         if (strpos($filename, '.') === false) {
             return false;
@@ -118,7 +118,7 @@ class Utility
      * @param string $directory Directory path to extract locale identifier from
      * @return mixed The string with extracted locale identifier of FALSE on failure
      */
-    public static function extractLocaleTagFromDirectory($directory)
+    public static function extractLocaleTagFromDirectory(string $directory)
     {
         $directoryParts = explode('/', rtrim($directory, '/'));
         $lastDirectoryPart = array_pop($directoryParts);
@@ -137,7 +137,7 @@ class Utility
      * @param string $needle
      * @return boolean TRUE if $haystack begins with $needle
      */
-    public static function stringBeginsWith($haystack, $needle)
+    public static function stringBeginsWith(string $haystack, string $needle): bool
     {
         if (!empty($needle) && strncmp($haystack, $needle, strlen($needle)) === 0) {
             return true;
@@ -153,7 +153,7 @@ class Utility
      * @param string $needle
      * @return boolean TRUE if $haystack ends with $needle
      */
-    public static function stringEndsWith($haystack, $needle)
+    public static function stringEndsWith(string $haystack, string $needle): bool
     {
         if (substr($haystack, - strlen($needle)) === $needle) {
             return true;

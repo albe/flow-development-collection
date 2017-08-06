@@ -59,7 +59,7 @@ class CldrParser extends AbstractXmlParser
      * @return array An array representing parsed CLDR File
      * @see AbstractXmlParser::doParsingFromRoot()
      */
-    protected function doParsingFromRoot(\SimpleXMLElement $root)
+    protected function doParsingFromRoot(\SimpleXMLElement $root): array
     {
         return $this->parseNode($root);
     }
@@ -116,7 +116,7 @@ class CldrParser extends AbstractXmlParser
      * @param string $attributeName
      * @return boolean
      */
-    protected function isDistinguishingAttribute($attributeName)
+    protected function isDistinguishingAttribute(string $attributeName): bool
     {
         // Taken from SupplementalMetadata and hardcoded for now
         $distinguishingAttributes = ['key', 'request', 'id', '_q', 'registry', 'alt', 'iso4217', 'iso3166', 'mzone', 'from', 'to', 'type'];

@@ -148,7 +148,7 @@ class XliffTranslationProvider implements TranslationProviderInterface
      * @return XliffModel New or existing instance
      * @throws I18n\Exception
      */
-    protected function getModel($packageKey, $sourceName, I18n\Locale $locale)
+    protected function getModel(string $packageKey, string $sourceName, I18n\Locale $locale): XliffModel
     {
         $sourcePath = Files::concatenatePaths(['resource://' . $packageKey, $this->xliffBasePath]);
         list($sourcePath, $foundLocale) = $this->localizationService->getXliffFilenameAndPath($sourcePath, $sourceName, $locale);

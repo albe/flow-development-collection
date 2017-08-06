@@ -140,11 +140,11 @@ class PluralsReader
      * Last one (other) is returned when number provided doesn't match any
      * of the rules, or there is no rules for given locale.
      *
-     * @param mixed $quantity A number to find plural form for (float or int)
+     * @param float|int $quantity A number to find plural form for (float or int)
      * @param Locale $locale
      * @return string One of plural form constants
      */
-    public function getPluralForm($quantity, Locale $locale)
+    public function getPluralForm(float $quantity, Locale $locale): string
     {
         if (!isset($this->rulesetsIndices[$locale->getLanguage()])) {
             return self::RULE_OTHER;
@@ -156,10 +156,12 @@ class PluralsReader
             return self::RULE_OTHER;
         }
 
+        $originalQuantity = $quantity;
         foreach ($ruleset as $form => $rule) {
             foreach ($rule as $subrule) {
                 $subrulePassed = false;
 
+                $quantity = $originalQuantity;
                 if ($subrule['modulo'] !== false) {
                     $quantity = fmod($quantity, $subrule['modulo']);
                 }
@@ -218,7 +220,7 @@ class PluralsReader
      * @param Locale $locale Locale to return plural forms for
      * @return array Plural forms' names (one, zero, two, few, many, other) available for language set in this model
      */
-    public function getPluralForms(Locale $locale)
+    public function getPluralForms(Locale $locale): array
     {
         if (!isset($this->rulesetsIndices[$locale->getLanguage()])) {
             return [self::RULE_OTHER];
@@ -289,37 +291,37 @@ class PluralsReader
      * @return array Parsed rule
      * @throws Exception\InvalidPluralRuleException When plural rule does not match regexp pattern
      */
-    protected function parseRule($rule)
+    protected function parseRule(string $rule): array
     {
         $parsedRule = [];
 
-        if (preg_match_all(self::PATTERN_MATCH_SUBRULE, strtolower(str_replace(' ', '', $rule)), $matches, \PREG_SET_ORDER)) {
-            foreach ($matches as $matchedSubrule) {
-                $subrule = [];
-
-                if ($matchedSubrule[1] === 'nmod') {
-                    $subrule['modulo'] = (int)$matchedSubrule[2];
-                } else {
-                    $subrule['modulo'] = false;
-                }
-
-                $condition = [$matchedSubrule[3], (int)$matchedSubrule[4]];
-                if (!in_array($matchedSubrule[3], ['is', 'isnot'], true)) {
-                    $condition[2] = (int)$matchedSubrule[5];
-                }
-
-                $subrule['condition'] = $condition;
-
-                if (isset($matchedSubrule[6]) && ($matchedSubrule[6] === 'and' || $matchedSubrule[6] === 'or')) {
-                    $subrule['logicalOperator'] = $matchedSubrule[6];
-                } else {
-                    $subrule['logicalOperator'] = false;
-                }
-
-                $parsedRule[] = $subrule;
-            }
-        } else {
+        if (preg_match_all(self::PATTERN_MATCH_SUBRULE, strtolower(str_replace(' ', '', $rule)), $matches, \PREG_SET_ORDER) === false) {
             throw new Exception\InvalidPluralRuleException('A plural rule string is invalid. CLDR files might be corrupted.', 1275493982);
+        }
+
+        foreach ($matches as $matchedSubrule) {
+            $subrule = [];
+
+            if ($matchedSubrule[1] === 'nmod') {
+                $subrule['modulo'] = (int)$matchedSubrule[2];
+            } else {
+                $subrule['modulo'] = false;
+            }
+
+            $condition = [$matchedSubrule[3], (int)$matchedSubrule[4]];
+            if (!in_array($matchedSubrule[3], ['is', 'isnot'], true)) {
+                $condition[2] = (int)$matchedSubrule[5];
+            }
+
+            $subrule['condition'] = $condition;
+
+            if (isset($matchedSubrule[6]) && ($matchedSubrule[6] === 'and' || $matchedSubrule[6] === 'or')) {
+                $subrule['logicalOperator'] = $matchedSubrule[6];
+            } else {
+                $subrule['logicalOperator'] = false;
+            }
+
+            $parsedRule[] = $subrule;
         }
 
         return $parsedRule;

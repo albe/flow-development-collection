@@ -95,7 +95,7 @@ class Service
      * @return Configuration
      * @api
      */
-    public function getConfiguration()
+    public function getConfiguration(): Configuration
     {
         return $this->configuration;
     }
@@ -121,7 +121,7 @@ class Service
      * @see Configuration::setFallbackRule()
      * @api
      */
-    public function getLocalizedFilename($pathAndFilename, Locale $locale = null, $strict = false)
+    public function getLocalizedFilename(string $pathAndFilename, Locale $locale = null, bool $strict = false): array
     {
         if ($locale === null) {
             $locale = $this->configuration->getCurrentLocale();
@@ -174,7 +174,7 @@ class Service
      * @see Configuration::setFallbackRule()
      * @api
      */
-    public function getXliffFilenameAndPath($path, $sourceName, Locale $locale = null)
+    public function getXliffFilenameAndPath(string $path, string $sourceName, Locale $locale = null): array
     {
         if ($locale === null) {
             $locale = $this->configuration->getCurrentLocale();
@@ -195,7 +195,7 @@ class Service
      * @param Locale $locale
      * @return array
      */
-    public function getLocaleChain(Locale $locale)
+    public function getLocaleChain(Locale $locale): array
     {
         $fallbackRule = $this->configuration->getFallbackRule();
         $localeChain = [(string)$locale => $locale];
@@ -257,7 +257,7 @@ class Service
      *
      * @return string The regex pattern matching the configured blacklist
      */
-    protected function getScanBlacklistPattern()
+    protected function getScanBlacklistPattern(): string
     {
         $pattern = implode('|', array_keys(array_filter((array)$this->settings['scan']['excludePatterns'])));
         if ($pattern !== '') {

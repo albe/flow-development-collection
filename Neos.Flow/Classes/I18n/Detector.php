@@ -62,7 +62,7 @@ class Detector
      * @return Locale Best-matching existing Locale instance
      * @api
      */
-    public function detectLocaleFromHttpHeader($acceptLanguageHeader)
+    public function detectLocaleFromHttpHeader(string $acceptLanguageHeader): Locale
     {
         $acceptableLanguages = I18n\Utility::parseAcceptLanguageHeader($acceptLanguageHeader);
 
@@ -100,7 +100,7 @@ class Detector
      * @return Locale Best-matching existing Locale instance
      * @api
      */
-    public function detectLocaleFromLocaleTag($localeIdentifier)
+    public function detectLocaleFromLocaleTag(string $localeIdentifier): Locale
     {
         try {
             return $this->detectLocaleFromTemplateLocale(new Locale($localeIdentifier));
@@ -118,7 +118,7 @@ class Detector
      * @return Locale Best-matching existing Locale instance
      * @api
      */
-    public function detectLocaleFromTemplateLocale(Locale $locale)
+    public function detectLocaleFromTemplateLocale(Locale $locale): Locale
     {
         $bestMatchingLocale = $this->localeCollection->findBestMatchingLocale($locale);
 

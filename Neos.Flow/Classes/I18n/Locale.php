@@ -89,11 +89,8 @@ class Locale
      * @throws Exception\InvalidLocaleIdentifierException If the locale identifier is not valid
      * @api
      */
-    public function __construct($localeIdentifier)
+    public function __construct(string $localeIdentifier)
     {
-        if (!is_string($localeIdentifier)) {
-            throw new \InvalidArgumentException('A locale identifier must be of type string, ' . gettype($localeIdentifier) . ' given.', 1221216120);
-        }
         if (preg_match(self::PATTERN_MATCH_LOCALEIDENTIFIER, $localeIdentifier, $matches) !== 1) {
             throw new Exception\InvalidLocaleIdentifierException('"' . $localeIdentifier . '" is not a valid locale identifier.', 1221137814);
         }
@@ -116,7 +113,7 @@ class Locale
      * @return string The language identifier
      * @api
      */
-    public function getLanguage()
+    public function getLanguage(): string
     {
         return $this->language;
     }
@@ -124,7 +121,7 @@ class Locale
     /**
      * Returns the script defined in this locale
      *
-     * @return string The script identifier
+     * @return string|null The script identifier
      * @api
      */
     public function getScript()
@@ -135,7 +132,7 @@ class Locale
     /**
      * Returns the region defined in this locale
      *
-     * @return string The region identifier
+     * @return string|null The region identifier
      * @api
      */
     public function getRegion()
@@ -146,7 +143,7 @@ class Locale
     /**
      * Returns the variant defined in this locale
      *
-     * @return string The variant identifier
+     * @return string|null The variant identifier
      * @api
      */
     public function getVariant()
@@ -160,7 +157,7 @@ class Locale
      * @return string The locale identifier (tag)
      * @api
      */
-    public function __toString()
+    public function __toString(): string
     {
         $localeIdentifier = $this->language;
 
