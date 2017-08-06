@@ -45,7 +45,7 @@ class PackageOrderResolver
      *
      * @return array
      */
-    public function sort()
+    public function sort(): array
     {
         if ($this->sortedPackages === null) {
             $this->sortedPackages = [];
@@ -55,7 +55,9 @@ class PackageOrderResolver
                 if ($resolved) {
                     reset($this->unsortedPackages);
                 } else {
-                    next($this->unsortedPackages);
+                    if (next($this->unsortedPackages) === false) {
+                        reset($this->unsortedPackages);
+                    }
                 }
             }
         }
@@ -71,7 +73,7 @@ class PackageOrderResolver
      * @param string $packageKey Package key to process
      * @return boolean true if package was sorted; false otherwise.
      */
-    protected function sortPackage($packageKey)
+    protected function sortPackage(string $packageKey): bool
     {
         if (!isset($this->packageStates[$packageKey])) {
             // Package does not exist; so that means it is just skipped; but that's to the outside as if sorting was successful.
@@ -132,7 +134,7 @@ class PackageOrderResolver
      * @param string[] $packagesToLoadBefore
      * @return int
      */
-    protected function sortListBefore($packageKey, array $packagesToLoadBefore)
+    protected function sortListBefore(string $packageKey, array $packagesToLoadBefore): int
     {
         $unresolvedDependencies = 0;
         foreach ($packagesToLoadBefore as $composerNameToLoadBefore) {
@@ -162,7 +164,7 @@ class PackageOrderResolver
      * @param string $requirement the composer requirement string
      * @return boolean TRUE if $requirement is a composer package (contains a slash), FALSE otherwise
      */
-    protected function packageRequirementIsComposerPackage($requirement)
+    protected function packageRequirementIsComposerPackage(string $requirement): bool
     {
         return (strpos($requirement, '/') !== false);
     }

@@ -32,7 +32,7 @@ class PackageFactory
      * @return PackageInterface
      * @throws Exception\CorruptPackageException
      */
-    public function create($packagesBasePath, $packagePath, $packageKey, $composerName, array $autoloadConfiguration = [], array $packageClassInformation = null)
+    public function create(string $packagesBasePath, string $packagePath, string $packageKey, string $composerName, array $autoloadConfiguration = [], array $packageClassInformation = null): PackageInterface
     {
         $absolutePackagePath = Files::concatenatePaths([$packagesBasePath, $packagePath]) . '/';
 
@@ -64,7 +64,7 @@ class PackageFactory
      * @throws Exception\CorruptPackageException
      * @throws Exception\InvalidPackagePathException
      */
-    public function detectFlowPackageFilePath($packageKey, $absolutePackagePath)
+    public function detectFlowPackageFilePath(string $packageKey, string $absolutePackagePath): array
     {
         if (!is_dir($absolutePackagePath)) {
             throw new Exception\InvalidPackagePathException(sprintf('The given package path "%s" is not a readable directory.', $absolutePackagePath), 1445904440);

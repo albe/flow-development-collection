@@ -99,7 +99,7 @@ class Package implements PackageInterface
      * @param array $autoloadConfiguration
      * @throws Exception\InvalidPackageKeyException
      */
-    public function __construct($packageKey, $composerName, $packagePath, array $autoloadConfiguration = [])
+    public function __construct(string $packageKey, string $composerName, string $packagePath, array $autoloadConfiguration = [])
     {
         $this->autoloadConfiguration = $autoloadConfiguration;
         $this->packagePath = Files::getNormalizedPath($packagePath);
@@ -122,7 +122,7 @@ class Package implements PackageInterface
      *
      * @return \Generator A Generator for class names (key) and their filename, including the absolute path.
      */
-    public function getClassFiles()
+    public function getClassFiles(): \Generator
     {
         foreach ($this->getFlattenedAutoloadConfiguration() as $configuration) {
             $normalizedAutoloadPath = $this->normalizeAutoloadPath($configuration['mappingType'], $configuration['namespace'], $configuration['classPath']);
@@ -138,9 +138,9 @@ class Package implements PackageInterface
     /**
      * Returns the array of filenames of class files provided by functional tests contained in this package
      *
-     * @return array An array of class names (key) and their filename, including the relative path to the package's directory
+     * @return \Generator A Generator of class names (key) and their filename, including the relative path to the package's directory
      */
-    public function getFunctionalTestsClassFiles()
+    public function getFunctionalTestsClassFiles(): \Generator
     {
         $namespaces = $this->getNamespaces();
         if (is_dir($this->packagePath . self::DIRECTORY_TESTS_FUNCTIONAL)) {
@@ -161,7 +161,7 @@ class Package implements PackageInterface
      * @return string
      * @api
      */
-    public function getPackageKey()
+    public function getPackageKey(): string
     {
         return $this->packageKey;
     }
@@ -171,7 +171,7 @@ class Package implements PackageInterface
      *
      * @return string
      */
-    public function getComposerName()
+    public function getComposerName(): string
     {
         return $this->composerName;
     }
@@ -182,7 +182,7 @@ class Package implements PackageInterface
      * @return array
      * @api
      */
-    public function getNamespaces()
+    public function getNamespaces(): array
     {
         if ($this->namespaces === null) {
             $this->explodeAutoloadConfiguration();
@@ -194,7 +194,7 @@ class Package implements PackageInterface
     /**
      * @return string[]
      */
-    public function getAutoloadTypes()
+    public function getAutoloadTypes(): array
     {
         if ($this->autoloadTypes === null) {
             $this->explodeAutoloadConfiguration();
@@ -209,7 +209,7 @@ class Package implements PackageInterface
      * @return boolean
      * @api
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->protected;
     }
@@ -219,7 +219,7 @@ class Package implements PackageInterface
      *
      * @return boolean
      */
-    public function isObjectManagementEnabled()
+    public function isObjectManagementEnabled(): bool
     {
         return $this->objectManagementEnabled;
     }
@@ -242,7 +242,7 @@ class Package implements PackageInterface
      * @return string Path to this package's main directory
      * @api
      */
-    public function getPackagePath()
+    public function getPackagePath(): string
     {
         return $this->packagePath;
     }
@@ -250,7 +250,7 @@ class Package implements PackageInterface
     /**
      * @return array
      */
-    public function getAutoloadPaths()
+    public function getAutoloadPaths(): array
     {
         return array_map(function ($configuration) {
             return $configuration['classPath'];
@@ -264,7 +264,7 @@ class Package implements PackageInterface
      * @api
      * TODO: Should be replaced by using autoload-dev
      */
-    public function getFunctionalTestsPath()
+    public function getFunctionalTestsPath(): string
     {
         return $this->packagePath . self::DIRECTORY_TESTS_FUNCTIONAL;
     }
@@ -275,7 +275,7 @@ class Package implements PackageInterface
      * @return string Path to this package's Resources directory
      * @api
      */
-    public function getResourcesPath()
+    public function getResourcesPath(): string
     {
         return $this->packagePath . self::DIRECTORY_RESOURCES;
     }
@@ -286,7 +286,7 @@ class Package implements PackageInterface
      * @return string Path to this package's Configuration directory
      * @api
      */
-    public function getConfigurationPath()
+    public function getConfigurationPath(): string
     {
         return $this->packagePath . self::DIRECTORY_CONFIGURATION;
     }
@@ -296,7 +296,7 @@ class Package implements PackageInterface
      *
      * @return array
      */
-    public function getAutoloadConfiguration()
+    public function getAutoloadConfiguration(): array
     {
         return $this->autoloadConfiguration;
     }
@@ -306,7 +306,7 @@ class Package implements PackageInterface
      *
      * @return array Keys: "namespace", "classPath", "mappingType"
      */
-    public function getFlattenedAutoloadConfiguration()
+    public function getFlattenedAutoloadConfiguration(): array
     {
         if ($this->flattenedAutoloadConfiguration === null) {
             $this->explodeAutoloadConfiguration();
@@ -333,7 +333,7 @@ class Package implements PackageInterface
      * @return string
      * @api
      */
-    public function getInstalledVersion()
+    public function getInstalledVersion(): string
     {
         return PackageManager::getPackageVersion($this->composerName) ?: $this->getComposerManifest('version');
     }
@@ -344,7 +344,7 @@ class Package implements PackageInterface
      * @param string $autoloadPath
      * @return string
      */
-    protected function normalizeAutoloadPath($autoloadType, $autoloadNamespace, $autoloadPath)
+    protected function normalizeAutoloadPath(string $autoloadType, string $autoloadNamespace, string $autoloadPath): string
     {
         $normalizedAutoloadPath = $autoloadPath;
         if ($autoloadType === ClassLoader::MAPPING_TYPE_PSR0) {
@@ -365,7 +365,7 @@ class Package implements PackageInterface
      * @param string $autoloadNamespace
      * @return \Generator
      */
-    protected function getClassesInNormalizedAutoloadPath($baseAutoloadPath, $autoloadNamespace)
+    protected function getClassesInNormalizedAutoloadPath(string $baseAutoloadPath, string $autoloadNamespace): \Generator
     {
         $autoloadNamespace = trim($autoloadNamespace, '\\') . '\\';
         $directories = [''];
@@ -398,12 +398,10 @@ class Package implements PackageInterface
     }
 
     /**
-     *
-     *
      * @param string $path
      * @return boolean
      */
-    protected function isPathAutoloadEntryPoint($path)
+    protected function isPathAutoloadEntryPoint(string $path): bool
     {
         return array_reduce($this->getFlattenedAutoloadConfiguration(), function ($isAutoloadEntryPoint, $configuration) use ($path) {
             $normalizedAutoloadPath = $this->normalizeAutoloadPath($configuration['mappingType'], $configuration['namespace'], $configuration['classPath']);

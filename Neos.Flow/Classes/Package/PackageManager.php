@@ -120,7 +120,7 @@ class PackageManager implements PackageManagerInterface
     /**
      * @param string $packageStatesPathAndFilename
      */
-    public function __construct($packageStatesPathAndFilename = '')
+    public function __construct(string $packageStatesPathAndFilename = '')
     {
         $this->packageFactory = new PackageFactory();
         $this->packageStatesPathAndFilename = $packageStatesPathAndFilename ?: FLOW_PATH_CONFIGURATION . 'PackageStates.php';
@@ -153,7 +153,7 @@ class PackageManager implements PackageManagerInterface
      * @return boolean TRUE if the package is available, otherwise FALSE
      * @api
      */
-    public function isPackageAvailable($packageKey)
+    public function isPackageAvailable($packageKey): bool
     {
         return ($this->getCaseSensitivePackageKey($packageKey) !== false);
     }
@@ -165,7 +165,7 @@ class PackageManager implements PackageManagerInterface
      * @return boolean TRUE if package is active, otherwise FALSE
      * @api
      */
-    public function isPackageActive($packageKey)
+    public function isPackageActive($packageKey): bool
     {
         return (isset($this->activePackages[$packageKey]));
     }
@@ -175,7 +175,7 @@ class PackageManager implements PackageManagerInterface
      *
      * @return string
      */
-    public function getPackagesBasePath()
+    public function getPackagesBasePath(): string
     {
         return $this->packagesBasePath;
     }
@@ -188,7 +188,7 @@ class PackageManager implements PackageManagerInterface
      * @throws Exception\UnknownPackageException if the specified package is not known
      * @api
      */
-    public function getPackage($packageKey)
+    public function getPackage($packageKey): PackageInterface
     {
         if (!$this->isPackageAvailable($packageKey)) {
             throw new Exception\UnknownPackageException('Package "' . $packageKey . '" is not available. Please check if the package exists and that the package key is correct (package keys are case sensitive).', 1166546734);
@@ -204,7 +204,7 @@ class PackageManager implements PackageManagerInterface
      * @return array<PackageInterface>
      * @api
      */
-    public function getAvailablePackages()
+    public function getAvailablePackages(): array
     {
         return $this->packages;
     }
@@ -217,7 +217,7 @@ class PackageManager implements PackageManagerInterface
      * @return array <PackageInterface>
      * @api
      */
-    public function getActivePackages()
+    public function getActivePackages(): array
     {
         return $this->activePackages;
     }
@@ -229,7 +229,7 @@ class PackageManager implements PackageManagerInterface
      *
      * @return array<PackageInterface>
      */
-    public function getFrozenPackages()
+    public function getFrozenPackages(): array
     {
         $frozenPackages = [];
         if ($this->bootstrap->getContext()->isDevelopment()) {
@@ -258,7 +258,7 @@ class PackageManager implements PackageManagerInterface
      * @throws Exception\InvalidPackageStateException
      * @api
      */
-    public function getFilteredPackages($packageState = 'available', $packagePath = null, $packageType = null)
+    public function getFilteredPackages($packageState = 'available', $packagePath = null, $packageType = null): array
     {
         switch (strtolower($packageState)) {
             case 'available':
@@ -292,7 +292,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $filterPath Filter out anything that's not in this path
      * @return array<PackageInterface>
      */
-    protected function filterPackagesByPath(&$packages, $filterPath)
+    protected function filterPackagesByPath(array &$packages, string $filterPath): array
     {
         $filteredPackages = [];
         /** @var $package Package */
@@ -315,7 +315,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $packageType Filter out anything that's not of this packageType
      * @return array<PackageInterface>
      */
-    protected function filterPackagesByType(&$packages, $packageType)
+    protected function filterPackagesByType(array &$packages, string $packageType): array
     {
         $filteredPackages = [];
         /** @var $package Package */
@@ -341,7 +341,7 @@ class PackageManager implements PackageManagerInterface
      * @throws Exception\PackageKeyAlreadyExistsException
      * @api
      */
-    public function createPackage($packageKey, array $manifest = [], $packagesPath = null)
+    public function createPackage($packageKey, array $manifest = [], $packagesPath = null): PackageInterface
     {
         if (!$this->isPackageKeyValid($packageKey)) {
             throw new Exception\InvalidPackageKeyException('The package key "' . $packageKey . '" is invalid', 1220722210);
@@ -443,7 +443,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $packagePath absolute path to the package
      * @return string
      */
-    protected function buildInactivePackageRelativePath($packagePath)
+    protected function buildInactivePackageRelativePath(string $packagePath): string
     {
         return Files::getNormalizedPath(Files::concatenatePaths([self::INACTIVE_PACKAGES_FOLDER, str_replace($this->packagesBasePath, '', $packagePath)]));
     }
@@ -454,7 +454,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $inactivePackagePath
      * @return string
      */
-    protected function buildActivePackageRelativePath($inactivePackagePath)
+    protected function buildActivePackageRelativePath(string $inactivePackagePath): string
     {
         $inactivePackagesBasePath = Files::getNormalizedPath(Files::concatenatePaths([$this->packagesBasePath, self::INACTIVE_PACKAGES_FOLDER]));
         return Files::getNormalizedPath(str_replace($inactivePackagesBasePath, '', $inactivePackagePath));
@@ -466,7 +466,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $packagePath absolute path to the package
      * @return void
      */
-    protected function movePackageToDeactivatedPackages($packagePath)
+    protected function movePackageToDeactivatedPackages(string $packagePath)
     {
         $inactivePackagePath = Files::getNormalizedPath(Files::concatenatePaths([
             $this->packagesBasePath,
@@ -481,7 +481,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $inactivePackagePath
      * @return void
      */
-    protected function movePackageToActivatedPackages($inactivePackagePath)
+    protected function movePackageToActivatedPackages(string $inactivePackagePath)
     {
         $activePackagePath = Files::getNormalizedPath(Files::concatenatePaths([
             $this->packagesBasePath,
@@ -497,7 +497,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $toAbsolutePath
      * @return void
      */
-    protected function movePackage($fromAbsolutePath, $toAbsolutePath)
+    protected function movePackage(string $fromAbsolutePath, string $toAbsolutePath)
     {
         Files::createDirectoryRecursively($toAbsolutePath);
         Files::copyDirectoryRecursively($fromAbsolutePath, $toAbsolutePath, false, true);
@@ -538,7 +538,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $packageKey The package to check
      * @return boolean
      */
-    public function isPackageFrozen($packageKey)
+    public function isPackageFrozen($packageKey): bool
     {
         if (!isset($this->packages[$packageKey])) {
             return false;
@@ -655,7 +655,7 @@ class PackageManager implements PackageManagerInterface
      * @return array The found and sorted package states.
      * @api
      */
-    public function rescanPackages($reloadPackageStates = true)
+    public function rescanPackages($reloadPackageStates = true): array
     {
         $loadedPackageStates = $this->packageStatesConfiguration;
         if ($reloadPackageStates) {
@@ -674,7 +674,7 @@ class PackageManager implements PackageManagerInterface
      *
      * @return array
      */
-    protected function getCurrentPackageStates()
+    protected function getCurrentPackageStates(): array
     {
         $savePackageStates = false;
         $loadedPackageStates = $this->loadPackageStates();
@@ -699,7 +699,7 @@ class PackageManager implements PackageManagerInterface
      *
      * @return array
      */
-    protected function loadPackageStates()
+    protected function loadPackageStates(): array
     {
         return (is_file($this->packageStatesPathAndFilename) ? include($this->packageStatesPathAndFilename) : []);
     }
@@ -713,7 +713,7 @@ class PackageManager implements PackageManagerInterface
      * @throws Exception
      * @throws InvalidConfigurationException
      */
-    protected function scanAvailablePackages($previousPackageStatesConfiguration)
+    protected function scanAvailablePackages(array $previousPackageStatesConfiguration): array
     {
         $recoveredStateByPackage = $this->recoverStateFromConfiguration($previousPackageStatesConfiguration);
         $newPackageStatesConfiguration = ['packages' => []];
@@ -777,7 +777,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $startingDirectory
      * @return \Generator
      */
-    protected function findComposerPackagesInPath($startingDirectory)
+    protected function findComposerPackagesInPath(string $startingDirectory): \Generator
     {
         $directories = [$startingDirectory];
         while ($directories !== []) {
@@ -815,9 +815,9 @@ class PackageManager implements PackageManagerInterface
      * @param string $state
      * @return array
      */
-    protected function preparePackageStateConfiguration($packageKey, $packagePath, $composerManifest, $state = self::PACKAGE_STATE_ACTIVE)
+    protected function preparePackageStateConfiguration(string $packageKey, string $packagePath, array $composerManifest, string $state = self::PACKAGE_STATE_ACTIVE): array
     {
-        $autoload = isset($composerManifest['autoload']) ? $composerManifest['autoload'] : [];
+        $autoload = $composerManifest['autoload'] ?? [];
 
         return [
             'state' => $state,
@@ -837,7 +837,7 @@ class PackageManager implements PackageManagerInterface
      * @return string
      * @see https://getcomposer.org/doc/04-schema.md#version
      */
-    public static function getPackageVersion($composerName)
+    public static function getPackageVersion(string $composerName): string
     {
         foreach (ComposerUtility::readComposerLock() as $composerLockData) {
             if (!isset($composerLockData['name'])) {
@@ -857,7 +857,7 @@ class PackageManager implements PackageManagerInterface
      * @param array $packageStatesConfiguration
      * @throws Exception\CorruptPackageException
      */
-    protected function registerPackagesFromConfiguration($packageStatesConfiguration)
+    protected function registerPackagesFromConfiguration(array $packageStatesConfiguration)
     {
         foreach ($packageStatesConfiguration['packages'] as $composerName => $packageStateConfiguration) {
             $this->registerPackageFromStateConfiguration($composerName, $packageStateConfiguration);
@@ -873,10 +873,10 @@ class PackageManager implements PackageManagerInterface
      * @param array $packageStateConfiguration
      * @return void
      */
-    protected function registerPackageFromStateConfiguration($composerName, $packageStateConfiguration)
+    protected function registerPackageFromStateConfiguration(string $composerName, array $packageStateConfiguration)
     {
-        $packagePath = isset($packageStateConfiguration['packagePath']) ? $packageStateConfiguration['packagePath'] : null;
-        $packageClassInformation = isset($packageStateConfiguration['packageClassInformation']) ? $packageStateConfiguration['packageClassInformation'] : null;
+        $packagePath = $packageStateConfiguration['packagePath'] ?? null;
+        $packageClassInformation = $packageStateConfiguration['packageClassInformation'] ?? null;
         $package = $this->packageFactory->create($this->packagesBasePath, $packagePath, $packageStateConfiguration['packageKey'], $composerName, $packageStateConfiguration['autoloadConfiguration'], $packageClassInformation);
         $this->packageKeys[strtolower($package->getPackageKey())] = $package->getPackageKey();
         $this->packages[$package->getPackageKey()] = $package;
@@ -895,7 +895,7 @@ class PackageManager implements PackageManagerInterface
      * @param array $packageStates
      * @return array
      */
-    protected function sortAndSavePackageStates(array $packageStates)
+    protected function sortAndSavePackageStates(array $packageStates): array
     {
         $orderedPackageStates = $this->sortAvailablePackagesByDependencies($packageStates);
         $this->savePackageStates($orderedPackageStates);
@@ -940,7 +940,7 @@ class PackageManager implements PackageManagerInterface
      * @param array $packageStates The unordered package states
      * @return array ordered package states.
      */
-    protected function sortAvailablePackagesByDependencies(array $packageStates)
+    protected function sortAvailablePackagesByDependencies(array $packageStates): array
     {
         $packageOrderResolver = new PackageOrderResolver($packageStates['packages'], $this->collectPackageManifestData($packageStates));
         $packageStates['packages'] = $packageOrderResolver->sort();
@@ -954,7 +954,7 @@ class PackageManager implements PackageManagerInterface
      * @param array $packageStates
      * @return array
      */
-    protected function collectPackageManifestData(array $packageStates)
+    protected function collectPackageManifestData(array $packageStates): array
     {
         return array_map(function ($packageState) {
             return ComposerUtility::getComposerManifest(Files::getNormalizedPath(Files::concatenatePaths([$this->packagesBasePath, $packageState['packagePath']])));
@@ -968,7 +968,7 @@ class PackageManager implements PackageManagerInterface
      * @param array $packageStatesConfiguration
      * @return array
      */
-    protected function recoverStateFromConfiguration($packageStatesConfiguration)
+    protected function recoverStateFromConfiguration(array $packageStatesConfiguration): array
     {
         $packageStateByComposerName = [];
         if (isset($packageStatesConfiguration['packages']) && is_array($packageStatesConfiguration['packages'])) {
@@ -998,7 +998,7 @@ class PackageManager implements PackageManagerInterface
     {
         $lowerCasedPackageKey = strtolower($unknownCasedPackageKey);
 
-        return (isset($this->packageKeys[$lowerCasedPackageKey])) ? $this->packageKeys[$lowerCasedPackageKey] : false;
+        return $this->packageKeys[$lowerCasedPackageKey] ?? false;
     }
 
     /**
@@ -1008,7 +1008,7 @@ class PackageManager implements PackageManagerInterface
      * @return string
      * @throws Exception\InvalidPackageStateException
      */
-    public function getPackageKeyFromComposerName($composerName)
+    public function getPackageKeyFromComposerName(string $composerName): string
     {
         if ($this->composerNameToPackageKeyMap === []) {
             foreach ($this->packageStatesConfiguration['packages'] as $packageStateConfiguration) {
@@ -1031,7 +1031,7 @@ class PackageManager implements PackageManagerInterface
      * @return boolean If the package key is valid, returns TRUE otherwise FALSE
      * @api
      */
-    public function isPackageKeyValid($packageKey)
+    public function isPackageKeyValid($packageKey): bool
     {
         return preg_match(PackageInterface::PATTERN_MATCH_PACKAGEKEY, $packageKey) === 1;
     }
@@ -1050,7 +1050,7 @@ class PackageManager implements PackageManagerInterface
      * @param string $packagePath
      * @return string
      */
-    protected function getPackageKeyFromManifest(array $manifest, $packagePath)
+    protected function getPackageKeyFromManifest(array $manifest, string $packagePath): string
     {
         if (isset($manifest['extra']['neos']['package-key']) && $this->isPackageKeyValid($manifest['extra']['neos']['package-key'])) {
             return $manifest['extra']['neos']['package-key'];
@@ -1080,12 +1080,12 @@ class PackageManager implements PackageManagerInterface
      * - composer name
      *
      * @param string $composerName
-     * @param string $packageType
-     * @param string $packagePath
-     * @param string $autoloadNamespace
+     * @param string|null $packageType
+     * @param string|null $packagePath
+     * @param string|null $autoloadNamespace
      * @return string
      */
-    protected function derivePackageKey($composerName, $packageType = null, $packagePath = null, $autoloadNamespace = null)
+    protected function derivePackageKey(string $composerName, string $packageType = null, string $packagePath = null, string $autoloadNamespace = null): string
     {
         $packageKey = '';
 
@@ -1100,7 +1100,7 @@ class PackageManager implements PackageManagerInterface
             $packageKey = str_replace('\\', '.', $autoloadNamespace);
         }
 
-        if (($packageKey === null || $this->isPackageKeyValid($packageKey) === false)) {
+        if ($packageKey === null || $this->isPackageKeyValid($packageKey) === false) {
             $packageKey = str_replace('/', '.', $composerName);
         }
 
