@@ -52,7 +52,7 @@ class MvcPropertyMappingConfigurationService
      * @return string trusted properties token
      * @throws InvalidArgumentForHashGenerationException
      */
-    public function generateTrustedPropertiesToken($formFieldNames, $fieldNamePrefix = '')
+    public function generateTrustedPropertiesToken(array $formFieldNames, string $fieldNamePrefix = ''): string
     {
         $formFieldArray = [];
         foreach ($formFieldNames as $formField) {
@@ -100,7 +100,7 @@ class MvcPropertyMappingConfigurationService
      * @param array $formFieldArray form field array to be serialized and hashed
      * @return string Hash
      */
-    protected function serializeAndHashFormFieldArray($formFieldArray)
+    protected function serializeAndHashFormFieldArray(array $formFieldArray): string
     {
         $serializedFormFieldArray = serialize($formFieldArray);
         return $this->hashService->appendHmac($serializedFormFieldArray);
@@ -123,13 +123,15 @@ class MvcPropertyMappingConfigurationService
         }
         $serializedTrustedProperties = $this->hashService->validateAndStripHmac($trustedPropertiesToken);
 
-        $trustedProperties = unserialize($serializedTrustedProperties);
+        $trustedProperties = unserialize($serializedTrustedProperties, ['allowed_classes' => false]);
         foreach ($trustedProperties as $propertyName => $propertyConfiguration) {
             if (!$controllerArguments->hasArgument($propertyName)) {
                 continue;
             }
             $propertyMappingConfiguration = $controllerArguments->getArgument($propertyName)->getPropertyMappingConfiguration();
-            $this->modifyPropertyMappingConfiguration($propertyConfiguration, $propertyMappingConfiguration);
+            if (is_array($propertyConfiguration)) {
+                $this->modifyPropertyMappingConfiguration($propertyConfiguration, $propertyMappingConfiguration);
+            }
         }
     }
 
@@ -144,11 +146,8 @@ class MvcPropertyMappingConfigurationService
      * @param PropertyMappingConfiguration $propertyMappingConfiguration
      * @return void
      */
-    protected function modifyPropertyMappingConfiguration($propertyConfiguration, PropertyMappingConfiguration $propertyMappingConfiguration)
+    protected function modifyPropertyMappingConfiguration(array $propertyConfiguration, PropertyMappingConfiguration $propertyMappingConfiguration)
     {
-        if (!is_array($propertyConfiguration)) {
-            return;
-        }
         if (isset($propertyConfiguration['__identity'])) {
             $propertyMappingConfiguration->setTypeConverterOption(PersistentObjectConverter::class, PersistentObjectConverter::CONFIGURATION_MODIFICATION_ALLOWED, true);
             unset($propertyConfiguration['__identity']);

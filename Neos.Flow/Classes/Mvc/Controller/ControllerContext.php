@@ -77,7 +77,7 @@ class ControllerContext
      * @return RequestInterface
      * @api
      */
-    public function getRequest()
+    public function getRequest(): RequestInterface
     {
         return $this->request;
     }
@@ -88,7 +88,7 @@ class ControllerContext
      * @return ResponseInterface
      * @api
      */
-    public function getResponse()
+    public function getResponse(): ResponseInterface
     {
         return $this->response;
     }
@@ -99,7 +99,7 @@ class ControllerContext
      * @return Arguments
      * @api
      */
-    public function getArguments()
+    public function getArguments(): Arguments
     {
         return $this->arguments;
     }
@@ -110,7 +110,7 @@ class ControllerContext
      * @return UriBuilder
      * @api
      */
-    public function getUriBuilder()
+    public function getUriBuilder(): UriBuilder
     {
         return $this->uriBuilder;
     }
@@ -121,7 +121,7 @@ class ControllerContext
      * @return FlashMessageContainer A container for flash messages
      * @api
      */
-    public function getFlashMessageContainer()
+    public function getFlashMessageContainer(): FlashMessageContainer
     {
         return $this->flashMessageContainer;
     }

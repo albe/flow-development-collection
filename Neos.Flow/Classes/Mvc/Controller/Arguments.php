@@ -103,10 +103,10 @@ class Arguments extends \ArrayObject
      * @throws NoSuchArgumentException if the argument does not exist
      * @api
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): Argument
     {
         $translatedOffset = $this->validateArgumentExistence($offset);
-        if ($translatedOffset === false) {
+        if ($translatedOffset === '') {
             throw new \Neos\Flow\Mvc\Exception\NoSuchArgumentException('An argument "' . $offset . '" does not exist.', 1216909923);
         }
         return parent::offsetGet($translatedOffset);
@@ -124,7 +124,7 @@ class Arguments extends \ArrayObject
      * @return Argument The new argument
      * @api
      */
-    public function addNewArgument($name, $dataType = 'string', $isRequired = true, $defaultValue = null)
+    public function addNewArgument(string $name, string $dataType = 'string', bool $isRequired = true, $defaultValue = null): Argument
     {
         $argument = new Argument($name, $dataType);
         $argument->setRequired($isRequired);
@@ -158,7 +158,7 @@ class Arguments extends \ArrayObject
      * @throws NoSuchArgumentException
      * @api
      */
-    public function getArgument($argumentName)
+    public function getArgument(string $argumentName): Argument
     {
         return $this->offsetGet($argumentName);
     }
@@ -171,7 +171,7 @@ class Arguments extends \ArrayObject
      * @see offsetExists()
      * @api
      */
-    public function hasArgument($argumentName)
+    public function hasArgument(string $argumentName): bool
     {
         return $this->offsetExists($argumentName);
     }
@@ -182,7 +182,7 @@ class Arguments extends \ArrayObject
      * @return array Argument names
      * @api
      */
-    public function getArgumentNames()
+    public function getArgumentNames(): array
     {
         return array_keys($this->argumentNames);
     }
@@ -196,7 +196,7 @@ class Arguments extends \ArrayObject
      * @return void
      * @throws \LogicException
      */
-    public function __call($methodName, array $arguments)
+    public function __call(string $methodName, array $arguments)
     {
         if (substr($methodName, 0, 3) !== 'set') {
             throw new \LogicException('Unknown method "' . $methodName . '".', 1210858451);
@@ -223,13 +223,13 @@ class Arguments extends \ArrayObject
      * @param string $argumentName argument name
      * @return string long argument name or empty string
      */
-    protected function validateArgumentExistence($argumentName)
+    protected function validateArgumentExistence(string $argumentName): string
     {
         if (in_array($argumentName, $this->getArgumentNames())) {
             return $argumentName;
         }
 
-        return false;
+        return '';
     }
 
     /**
@@ -250,7 +250,7 @@ class Arguments extends \ArrayObject
      *
      * @return Result
      */
-    public function getValidationResults()
+    public function getValidationResults(): Result
     {
         $results = new Result();
 

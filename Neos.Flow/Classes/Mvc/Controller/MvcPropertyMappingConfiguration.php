@@ -29,7 +29,7 @@ class MvcPropertyMappingConfiguration extends PropertyMappingConfiguration
      * @return MvcPropertyMappingConfiguration this
      * @api
      */
-    public function allowCreationForSubProperty($propertyPath)
+    public function allowCreationForSubProperty(string $propertyPath): MvcPropertyMappingConfiguration
     {
         $this->forProperty($propertyPath)->setTypeConverterOption(PersistentObjectConverter::class, PersistentObjectConverter::CONFIGURATION_CREATION_ALLOWED, true);
         return $this;
@@ -42,7 +42,7 @@ class MvcPropertyMappingConfiguration extends PropertyMappingConfiguration
      * @return MvcPropertyMappingConfiguration this
      * @api
      */
-    public function allowModificationForSubProperty($propertyPath)
+    public function allowModificationForSubProperty(string $propertyPath): MvcPropertyMappingConfiguration
     {
         $this->forProperty($propertyPath)->setTypeConverterOption(PersistentObjectConverter::class, PersistentObjectConverter::CONFIGURATION_MODIFICATION_ALLOWED, true);
         return $this;
@@ -54,7 +54,7 @@ class MvcPropertyMappingConfiguration extends PropertyMappingConfiguration
      * @return MvcPropertyMappingConfiguration this
      * @api
      */
-    public function allowOverrideTargetType()
+    public function allowOverrideTargetType(): MvcPropertyMappingConfiguration
     {
         $this->setTypeConverterOption(PersistentObjectConverter::class, PersistentObjectConverter::CONFIGURATION_OVERRIDE_TARGET_TYPE_ALLOWED, true);
         return $this;
@@ -70,7 +70,7 @@ class MvcPropertyMappingConfiguration extends PropertyMappingConfiguration
      * @return MvcPropertyMappingConfiguration this
      * @api
      */
-    public function setTargetTypeForSubProperty($propertyPath, $targetType)
+    public function setTargetTypeForSubProperty(string $propertyPath, string $targetType): MvcPropertyMappingConfiguration
     {
         $this->forProperty($propertyPath)->setTypeConverterOption(PersistentObjectConverter::class, PersistentObjectConverter::CONFIGURATION_TARGET_TYPE, $targetType);
         return $this;

@@ -51,7 +51,7 @@ class RestController extends ActionController
      * @return string The action method name
      * @throws NoSuchActionException if the action specified in the request object does not exist (and if there's no default action either).
      */
-    protected function resolveActionMethodName()
+    protected function resolveActionMethodName(): string
     {
         if ($this->request->getControllerActionName() === 'index') {
             $actionName = 'index';
@@ -118,7 +118,7 @@ class RestController extends ActionController
      * @throws StopActionException
      * @api
      */
-    protected function redirectToUri($uri, $delay = 0, $statusCode = 303)
+    protected function redirectToUri($uri, int $delay = 0, int $statusCode = 303)
     {
         // the parent method throws the exception, but we need to act afterwards
         // thus the code in catch - it's the expected state

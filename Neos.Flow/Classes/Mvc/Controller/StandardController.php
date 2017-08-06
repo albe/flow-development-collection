@@ -27,7 +27,7 @@ class StandardController extends ActionController
      *
      * @return ViewInterface $view The view
      */
-    protected function resolveView()
+    protected function resolveView(): ViewInterface
     {
         $view = new SimpleTemplateView(['templateSource' => file_get_contents(FLOW_PATH_FLOW . 'Resources/Private/Mvc/StandardView_Template.html')]);
         $view->setControllerContext($this->controllerContext);

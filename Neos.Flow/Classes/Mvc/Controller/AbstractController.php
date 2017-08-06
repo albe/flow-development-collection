@@ -135,7 +135,7 @@ abstract class AbstractController implements ControllerInterface
      * @return ControllerContext The current controller context
      * @api
      */
-    public function getControllerContext()
+    public function getControllerContext(): ControllerContext
     {
         return $this->controllerContext;
     }
@@ -149,17 +149,14 @@ abstract class AbstractController implements ControllerInterface
      * @param string $messageTitle optional header of the FlashMessage
      * @param string $severity severity of the FlashMessage (one of the Message::SEVERITY_* constants)
      * @param array $messageArguments arguments to be passed to the FlashMessage
-     * @param integer $messageCode
+     * @param integer|null $messageCode
      * @return void
      * @throws \InvalidArgumentException if the message body is no string
      * @see Error\Message
      * @api
      */
-    public function addFlashMessage($messageBody, $messageTitle = '', $severity = Error\Message::SEVERITY_OK, array $messageArguments = [], $messageCode = null)
+    public function addFlashMessage(string $messageBody, string $messageTitle = '', string $severity = Error\Message::SEVERITY_OK, array $messageArguments = [], int $messageCode = null)
     {
-        if (!is_string($messageBody)) {
-            throw new \InvalidArgumentException('The message body must be of type string, "' . gettype($messageBody) . '" given.', 1243258395);
-        }
         switch ($severity) {
             case Error\Message::SEVERITY_NOTICE:
                 $message = new Error\Notice($messageBody, $messageCode, $messageArguments, $messageTitle);
@@ -183,15 +180,15 @@ abstract class AbstractController implements ControllerInterface
      * Request is directly transferred to the other action / controller
      *
      * @param string $actionName Name of the action to forward to
-     * @param string $controllerName Unqualified object name of the controller to forward to. If not specified, the current controller is used.
-     * @param string $packageKey Key of the package containing the controller to forward to. May also contain the sub package, concatenated with backslash (Vendor.Foo\Bar\Baz). If not specified, the current package is assumed.
+     * @param string|null $controllerName Unqualified object name of the controller to forward to. If not specified, the current controller is used.
+     * @param string|null $packageKey Key of the package containing the controller to forward to. May also contain the sub package, concatenated with backslash (Vendor.Foo\Bar\Baz). If not specified, the current package is assumed.
      * @param array $arguments Arguments to pass to the target action
      * @return void
      * @throws ForwardException
      * @see redirect()
      * @api
      */
-    protected function forward($actionName, $controllerName = null, $packageKey = null, array $arguments = [])
+    protected function forward(string $actionName, string $controllerName = null, string $packageKey = null, array $arguments = [])
     {
         $nextRequest = clone $this->request;
         $nextRequest->setControllerActionName($actionName);
@@ -255,18 +252,18 @@ abstract class AbstractController implements ControllerInterface
      * if used with other request types.
      *
      * @param string $actionName Name of the action to forward to
-     * @param string $controllerName Unqualified object name of the controller to forward to. If not specified, the current controller is used.
-     * @param string $packageKey Key of the package containing the controller to forward to. If not specified, the current package is assumed.
-     * @param array $arguments Array of arguments for the target action
+     * @param string|null $controllerName Unqualified object name of the controller to forward to. If not specified, the current controller is used.
+     * @param string|null $packageKey Key of the package containing the controller to forward to. If not specified, the current package is assumed.
+     * @param array|null $arguments Array of arguments for the target action
      * @param integer $delay (optional) The delay in seconds. Default is no delay.
      * @param integer $statusCode (optional) The HTTP status code for the redirect. Default is "303 See Other"
-     * @param string $format The format to use for the redirect URI
+     * @param string|null $format The format to use for the redirect URI
      * @return void
      * @throws StopActionException
      * @see forward()
      * @api
      */
-    protected function redirect($actionName, $controllerName = null, $packageKey = null, array $arguments = null, $delay = 0, $statusCode = 303, $format = null)
+    protected function redirect(string $actionName, string $controllerName = null, string $packageKey = null, array $arguments = null, int $delay = 0, int $statusCode = 303, string $format = null)
     {
         if ($packageKey !== null && strpos($packageKey, '\\') !== false) {
             list($packageKey, $subpackageKey) = explode('\\', $packageKey, 2);
@@ -300,7 +297,7 @@ abstract class AbstractController implements ControllerInterface
      * @see forwardToRequest()
      * @api
      */
-    protected function redirectToRequest(ActionRequest $request, $delay = 0, $statusCode = 303)
+    protected function redirectToRequest(ActionRequest $request, int $delay = 0, int $statusCode = 303)
     {
         $packageKey = $request->getControllerPackageKey();
         $subpackageKey = $request->getControllerSubpackageKey();
@@ -320,7 +317,7 @@ abstract class AbstractController implements ControllerInterface
      * @throws StopActionException
      * @api
      */
-    protected function redirectToUri($uri, $delay = 0, $statusCode = 303)
+    protected function redirectToUri($uri, int $delay = 0, int $statusCode = 303)
     {
         $escapedUri = htmlentities($uri, ENT_QUOTES, 'utf-8');
         $this->response->setContent('<html><head><meta http-equiv="refresh" content="' . intval($delay) . ';url=' . $escapedUri . '"/></head></html>');
@@ -337,13 +334,13 @@ abstract class AbstractController implements ControllerInterface
      * NOTE: This method only supports web requests and will throw an exception if used with other request types.
      *
      * @param integer $statusCode The HTTP status code
-     * @param string $statusMessage A custom HTTP status message
-     * @param string $content Body content which further explains the status
+     * @param string|null $statusMessage A custom HTTP status message
+     * @param string|null $content Body content which further explains the status
      * @throws UnsupportedRequestTypeException If the request is not a web request
      * @throws StopActionException
      * @api
      */
-    protected function throwStatus($statusCode, $statusMessage = null, $content = null)
+    protected function throwStatus(int $statusCode, string $statusMessage = null, string $content = null)
     {
         $this->response->setStatus($statusCode, $statusMessage);
         if ($content === null) {

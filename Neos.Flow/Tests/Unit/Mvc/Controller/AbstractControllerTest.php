@@ -135,19 +135,6 @@ class AbstractControllerTest extends UnitTestCase
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
-     */
-    public function addFlashMessageThrowsExceptionOnInvalidMessageBody()
-    {
-        $flashMessageContainer = new FlashMessageContainer();
-        $controller = $this->getAccessibleMock(AbstractController::class, ['processRequest']);
-        $this->inject($controller, 'flashMessageContainer', $flashMessageContainer);
-
-        $controller->addFlashMessage(new \stdClass());
-    }
-
-    /**
-     * @test
      */
     public function forwardSetsControllerAndArgumentsAtTheRequestObjectIfTheyAreSpecified()
     {

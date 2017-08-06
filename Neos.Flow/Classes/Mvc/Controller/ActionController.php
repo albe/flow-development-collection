@@ -202,7 +202,7 @@ class ActionController extends AbstractController
      * @throws NoSuchActionException
      * @throws InvalidActionVisibilityException
      */
-    protected function resolveActionMethodName()
+    protected function resolveActionMethodName(): string
     {
         $actionMethodName = $this->request->getControllerActionName() . 'Action';
         if (!is_callable([$this, $actionMethodName])) {
@@ -260,7 +260,7 @@ class ActionController extends AbstractController
      * @return array Array of method parameters by action name
      * @Flow\CompileStatic
      */
-    public static function getActionMethodParameters($objectManager)
+    public static function getActionMethodParameters(ObjectManagerInterface $objectManager): array
     {
         $reflectionService = $objectManager->get(ReflectionService::class);
 
@@ -283,7 +283,7 @@ class ActionController extends AbstractController
      *
      * @return array
      */
-    protected function getInformationNeededForInitializeActionMethodValidators()
+    protected function getInformationNeededForInitializeActionMethodValidators(): array
     {
         return [
             static::getActionValidationGroups($this->objectManager),
@@ -355,7 +355,7 @@ class ActionController extends AbstractController
      * @return array Array of validation groups by action method name
      * @Flow\CompileStatic
      */
-    public static function getActionValidationGroups($objectManager)
+    public static function getActionValidationGroups(ObjectManagerInterface $objectManager): array
     {
         $reflectionService = $objectManager->get(ReflectionService::class);
 
@@ -382,7 +382,7 @@ class ActionController extends AbstractController
      * @return array Array of validate annotation parameters by action method name
      * @Flow\CompileStatic
      */
-    public static function getActionValidateAnnotationData($objectManager)
+    public static function getActionValidateAnnotationData(ObjectManagerInterface $objectManager): array
     {
         $reflectionService = $objectManager->get(ReflectionService::class);
 
@@ -483,7 +483,7 @@ class ActionController extends AbstractController
      * @return array Array of argument names as key by action method name
      * @Flow\CompileStatic
      */
-    public static function getActionIgnoredValidationArguments($objectManager)
+    public static function getActionIgnoredValidationArguments(ObjectManagerInterface $objectManager): array
     {
         $reflectionService = $objectManager->get(ReflectionService::class);
 
@@ -514,7 +514,7 @@ class ActionController extends AbstractController
      * @return array Array of all public action method names, indexed by method name
      * @Flow\CompileStatic
      */
-    public static function getPublicActionMethods($objectManager)
+    public static function getPublicActionMethods(ObjectManagerInterface $objectManager): array
     {
         /** @var ReflectionService $reflectionService */
         $reflectionService = $objectManager->get(ReflectionService::class);
@@ -542,7 +542,7 @@ class ActionController extends AbstractController
      * @return ViewInterface the resolved view
      * @throws ViewNotFoundException if no view can be resolved
      */
-    protected function resolveView()
+    protected function resolveView(): ViewInterface
     {
         $viewsConfiguration = $this->viewConfigurationManager->getViewConfiguration($this->request);
         $viewObjectName = $this->defaultViewImplementation;
@@ -619,7 +619,7 @@ class ActionController extends AbstractController
      * @return string
      * @api
      */
-    protected function errorAction()
+    protected function errorAction(): string
     {
         $this->handleTargetNotFoundError();
         $this->addErrorFlashMessage();
@@ -692,7 +692,7 @@ class ActionController extends AbstractController
      *
      * @return string
      */
-    protected function getFlattenedValidationErrorMessage()
+    protected function getFlattenedValidationErrorMessage(): string
     {
         $outputMessage = 'Validation failed while trying to call ' . get_class($this) . '->' . $this->actionMethodName . '().' . PHP_EOL;
         $logMessage = $outputMessage;
@@ -715,7 +715,7 @@ class ActionController extends AbstractController
      * @return \Neos\Error\Messages\Message The flash message or FALSE if no flash message should be set
      * @api
      */
-    protected function getErrorFlashMessage()
+    protected function getErrorFlashMessage(): \Neos\Error\Messages\Message
     {
         return new Error\Error('An error occurred while trying to call %1$s->%2$s()', null, [get_class($this), $this->actionMethodName]);
     }

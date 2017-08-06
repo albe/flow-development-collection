@@ -65,15 +65,6 @@ class ArgumentTest extends UnitTestCase
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
-     */
-    public function constructingArgumentWithInvalidNameThrowsException()
-    {
-        new Mvc\Controller\Argument(new \ArrayObject(), 'Text');
-    }
-
-    /**
-     * @test
      */
     public function passingDataTypeToConstructorReallySetsTheDataType()
     {
