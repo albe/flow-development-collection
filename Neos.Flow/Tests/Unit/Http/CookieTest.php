@@ -141,15 +141,6 @@ class CookieTest extends UnitTestCase
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
-     */
-    public function constructorThrowsExceptionOnInvalidMaximumAgeParameter()
-    {
-        new Cookie('foo', 'bar', 0, 'urks');
-    }
-
-    /**
-     * @test
      */
     public function getMaximumAgeReturnsTheMaximumAge()
     {

@@ -38,7 +38,7 @@ class CurlEngine implements RequestEngineInterface
      * @param integer $optionName One of the CURLOPT_* constants
      * @param mixed $value The value to set
      */
-    public function setOption($optionName, $value)
+    public function setOption(int $optionName, $value)
     {
         $this->options[$optionName] = $value;
     }
@@ -52,7 +52,7 @@ class CurlEngine implements RequestEngineInterface
      * @throws Http\Exception
      * @throws CurlEngineException
      */
-    public function sendRequest(Http\Request $request)
+    public function sendRequest(Http\Request $request): Http\Response
     {
         if (!extension_loaded('curl')) {
             throw new Http\Exception('CurlEngine requires the PHP CURL extension to be installed and loaded.', 1346319808);

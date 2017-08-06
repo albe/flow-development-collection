@@ -174,15 +174,6 @@ class UriTest extends UnitTestCase
      * @test
      * @expectedException \InvalidArgumentException
      */
-    public function constructingWithNotAStringThrowsException()
-    {
-        new Uri(42);
-    }
-
-    /**
-     * @test
-     * @expectedException \InvalidArgumentException
-     */
     public function unparsableUriStringThrowsException()
     {
         new Uri('http:////localhost');

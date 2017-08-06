@@ -50,7 +50,7 @@ class UriTemplate
      * @param array $variables variables to use with the expansion
      * @return string
      */
-    public static function expand($template, array $variables)
+    public static function expand(string $template, array $variables): string
     {
         if (strpos($template, '{') === false) {
             return $template;
@@ -67,7 +67,7 @@ class UriTemplate
      * @param array $matches matches found in preg_replace_callback
      * @return string replacement string
      */
-    protected static function expandMatch(array $matches)
+    protected static function expandMatch(array $matches): string
     {
         $parsed = self::parseExpression($matches[1]);
         $replacements = [];
@@ -139,7 +139,7 @@ class UriTemplate
      * @param string $expression Expression to parse
      * @return array associative array of parts
      */
-    protected static function parseExpression($expression)
+    protected static function parseExpression(string $expression): array
     {
         if (isset(self::$operators[$expression[0]])) {
             $operator = $expression[0];
@@ -182,10 +182,10 @@ class UriTemplate
      * @param array $value
      * @param string $operator
      * @param string $separator
-     * @param $useQueryString
+     * @param bool $useQueryString
      * @return string
      */
-    protected static function encodeArrayVariable(array $variable, array $value, $operator, $separator, &$useQueryString)
+    protected static function encodeArrayVariable(array $variable, array $value, string $operator, string $separator, bool &$useQueryString): string
     {
         $isAssociativeArray = self::isAssociative($variable);
         $keyValuePairs = [];
@@ -250,7 +250,7 @@ class UriTemplate
      * @param array $array
      * @return boolean
      */
-    protected static function isAssociative(array $array)
+    protected static function isAssociative(array $array): bool
     {
         return count(array_filter(array_keys($array), 'is_string')) > 0;
     }
@@ -261,7 +261,7 @@ class UriTemplate
      * @param string $string
      * @return string
      */
-    protected static function decodeReservedDelimiters($string)
+    protected static function decodeReservedDelimiters(string $string): string
     {
         return str_replace(self::$encodedDelimiters, self::$delimiters, $string);
     }

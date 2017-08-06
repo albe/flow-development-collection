@@ -92,48 +92,43 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function __construct($uriString)
+    public function __construct(string $uriString)
     {
-        if (!is_string($uriString)) {
-            throw new \InvalidArgumentException('The URI must be a valid string.', 1176550571);
-        }
-
         $parseUrlException = null;
         try {
             $uriParts = Unicode\Functions::parse_url($uriString);
         } catch (ErrorException $exception) {
             $parseUrlException = $exception;
         }
-        if (is_array($uriParts)) {
-            $this->scheme = isset($uriParts['scheme']) ? $uriParts['scheme'] : null;
-            $this->username = isset($uriParts['user']) ? $uriParts['user'] : null;
-            $this->password = isset($uriParts['pass']) ? $uriParts['pass'] : null;
-            $this->host = isset($uriParts['host']) ? $uriParts['host'] : null;
-            $this->port = isset($uriParts['port']) ? $uriParts['port'] : null;
-            if ($this->port === null) {
-                switch ($this->scheme) {
-                    case 'http':
-                        $this->port = 80;
-                    break;
-                    case 'https':
-                        $this->port = 443;
-                    break;
-                }
-            }
-            $this->path = isset($uriParts['path']) ? $uriParts['path'] : null;
-            if (isset($uriParts['query'])) {
-                $this->setQuery($uriParts['query']);
-            }
-            $this->fragment = isset($uriParts['fragment']) ? $uriParts['fragment'] : null;
-        } else {
+        if (!is_array($uriParts)) {
             throw new \InvalidArgumentException('The given URI "' . $uriString . '" is not a valid one.', 1351594202, $parseUrlException);
         }
+        $this->scheme = $uriParts['scheme'] ?? null;
+        $this->username = $uriParts['user'] ?? null;
+        $this->password = $uriParts['pass'] ?? null;
+        $this->host = $uriParts['host'] ?? null;
+        $this->port = $uriParts['port'] ?? null;
+        if ($this->port === null) {
+            switch ($this->scheme) {
+                case 'http':
+                    $this->port = 80;
+                break;
+                case 'https':
+                    $this->port = 443;
+                break;
+            }
+        }
+        $this->path = $uriParts['path'] ?? null;
+        if (isset($uriParts['query'])) {
+            $this->setQuery($uriParts['query']);
+        }
+        $this->fragment = $uriParts['fragment'] ?? null;
     }
 
     /**
      * Returns the URI's scheme / protocol
      *
-     * @return string URI scheme / protocol
+     * @return string|null URI scheme / protocol
      * @api
      */
     public function getScheme()
@@ -149,7 +144,7 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setScheme($scheme)
+    public function setScheme(string $scheme)
     {
         if (preg_match(self::PATTERN_MATCH_SCHEME, $scheme) === 1) {
             $this->scheme = strtolower($scheme);
@@ -161,7 +156,7 @@ class Uri
     /**
      * Returns the username of a login
      *
-     * @return string User name of the login
+     * @return string|null User name of the login
      * @api
      */
     public function getUsername()
@@ -177,7 +172,7 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setUsername($username)
+    public function setUsername(string $username)
     {
         if (preg_match(self::PATTERN_MATCH_USERNAME, $username) === 1) {
             $this->username = $username;
@@ -189,7 +184,7 @@ class Uri
     /**
      * Returns the password of a login
      *
-     * @return string Password of the login
+     * @return string|null Password of the login
      * @api
      */
     public function getPassword()
@@ -205,7 +200,7 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setPassword($password)
+    public function setPassword(string $password)
     {
         if (preg_match(self::PATTERN_MATCH_PASSWORD, $password) === 1) {
             $this->password = $password;
@@ -217,7 +212,7 @@ class Uri
     /**
      * Returns the host(s) of the URI
      *
-     * @return string The hostname(s)
+     * @return string|null The hostname(s)
      * @api
      */
     public function getHost()
@@ -233,7 +228,7 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setHost($host)
+    public function setHost(string $host)
     {
         if (preg_match(self::PATTERN_MATCH_HOST, $host) === 1) {
             $this->host = $host;
@@ -245,7 +240,7 @@ class Uri
     /**
      * Returns the port of the URI
      *
-     * @return integer Port
+     * @return integer|null Port
      * @api
      */
     public function getPort()
@@ -256,14 +251,14 @@ class Uri
     /**
      * Sets the port in the URI
      *
-     * @param string $port The port number
+     * @param string|integer $port The port number
      * @return void
      * @throws \InvalidArgumentException
      * @api
      */
     public function setPort($port)
     {
-        if (preg_match(self::PATTERN_MATCH_PORT, $port) === 1) {
+        if (is_int($port) || preg_match(self::PATTERN_MATCH_PORT, $port) === 1) {
             $this->port = (integer)$port;
         } else {
             throw new \InvalidArgumentException('"' . $port . '" is not valid port number as part of a URI.', 1184071241);
@@ -273,7 +268,7 @@ class Uri
     /**
      * Returns the URI path
      *
-     * @return string URI path
+     * @return string|null URI path
      * @api
      */
     public function getPath()
@@ -289,7 +284,7 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setPath($path)
+    public function setPath(string $path)
     {
         if (preg_match(self::PATTERN_MATCH_PATH, $path) === 1) {
             $this->path = $path;
@@ -301,7 +296,7 @@ class Uri
     /**
      * Returns the URI's query part
      *
-     * @return string The query part
+     * @return string|null The query part
      * @api
      */
     public function getQuery()
@@ -316,7 +311,7 @@ class Uri
      * @return void
      * @api
      */
-    public function setQuery($query)
+    public function setQuery(string $query = null)
     {
         $this->query = $query;
         parse_str($query, $this->arguments);
@@ -328,7 +323,7 @@ class Uri
      * @return array Associative array of arguments and values of the URI's query part
      * @api
      */
-    public function getArguments()
+    public function getArguments(): array
     {
         return $this->arguments;
     }
@@ -336,7 +331,7 @@ class Uri
     /**
      * Returns the fragment / anchor, if any
      *
-     * @return string The fragment
+     * @return string|null The fragment
      * @api
      */
     public function getFragment()
@@ -352,7 +347,7 @@ class Uri
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setFragment($fragment)
+    public function setFragment(string $fragment = null)
     {
         if (preg_match(self::PATTERN_MATCH_FRAGMENT, $fragment) === 1) {
             $this->fragment = $fragment;
@@ -367,7 +362,7 @@ class Uri
      * @return string This URI as a string
      * @api
      */
-    public function __toString()
+    public function __toString(): string
     {
         $uriString = '';
 

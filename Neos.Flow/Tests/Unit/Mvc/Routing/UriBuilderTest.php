@@ -719,7 +719,9 @@ class UriBuilderTest extends UnitTestCase
      */
     public function buildPrependsBaseUriIfCreateAbsoluteUriIsSet()
     {
-        $this->mockHttpRequest->expects($this->atLeastOnce())->method('getBaseUri')->will($this->returnValue('http://www.domain.tld/document-root/'));
+        $mockUri = $this->createMock(Http\Uri::class);
+        $mockUri->expects($this->any())->method('__toString')->willReturn('http://www.domain.tld/document-root/');
+        $this->mockHttpRequest->expects($this->atLeastOnce())->method('getBaseUri')->willReturn($mockUri);
         $this->mockRouter->expects($this->once())->method('resolve')->will($this->returnValue('resolvedUri'));
 
         $this->uriBuilder->setCreateAbsoluteUri(true);

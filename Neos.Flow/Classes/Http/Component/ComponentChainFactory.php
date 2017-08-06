@@ -33,7 +33,7 @@ class ComponentChainFactory
      * @return ComponentChain
      * @throws Exception
      */
-    public function create(array $chainConfiguration)
+    public function create(array $chainConfiguration): ComponentChain
     {
         if (empty($chainConfiguration)) {
             return null;

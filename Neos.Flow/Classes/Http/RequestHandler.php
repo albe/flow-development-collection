@@ -73,7 +73,7 @@ class RequestHandler implements HttpRequestHandlerInterface
      * @return boolean If the request is a web request, TRUE otherwise FALSE
      * @api
      */
-    public function canHandleRequest()
+    public function canHandleRequest(): bool
     {
         return (PHP_SAPI !== 'cli');
     }
@@ -85,7 +85,7 @@ class RequestHandler implements HttpRequestHandlerInterface
      * @return integer The priority of the request handler.
      * @api
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 100;
     }
@@ -124,7 +124,7 @@ class RequestHandler implements HttpRequestHandlerInterface
      * @return Request
      * @api
      */
-    public function getHttpRequest()
+    public function getHttpRequest(): Request
     {
         return $this->componentContext->getHttpRequest();
     }
@@ -135,7 +135,7 @@ class RequestHandler implements HttpRequestHandlerInterface
      * @return Response
      * @api
      */
-    public function getHttpResponse()
+    public function getHttpResponse(): Response
     {
         return $this->componentContext->getHttpResponse();
     }
@@ -215,10 +215,10 @@ class RequestHandler implements HttpRequestHandlerInterface
      * @param string $version For example "2.3.7"
      * @return string For example "2"
      */
-    protected function renderMajorVersion($version)
+    protected function renderMajorVersion(string $version): string
     {
         preg_match('/^(\d+)/', $version, $versionMatches);
-        return isset($versionMatches[1]) ? $versionMatches[1] : '';
+        return $versionMatches[1] ?? '';
     }
 
     /**
@@ -227,9 +227,9 @@ class RequestHandler implements HttpRequestHandlerInterface
      * @param string $version For example "2.3.7"
      * @return string For example "2.3"
      */
-    protected function renderMinorVersion($version)
+    protected function renderMinorVersion(string $version): string
     {
         preg_match('/^(\d+\.\d+)/', $version, $versionMatches);
-        return isset($versionMatches[1]) ? $versionMatches[1] : '';
+        return $versionMatches[1] ?? '';
     }
 }

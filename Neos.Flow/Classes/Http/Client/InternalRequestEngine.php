@@ -99,7 +99,7 @@ class InternalRequestEngine implements RequestEngineInterface
      * @throws Http\Exception
      * @api
      */
-    public function sendRequest(Http\Request $httpRequest)
+    public function sendRequest(Http\Request $httpRequest): Http\Response
     {
         $requestHandler = $this->bootstrap->getActiveRequestHandler();
         if (!$requestHandler instanceof FunctionalTestRequestHandler) {
@@ -137,7 +137,7 @@ class InternalRequestEngine implements RequestEngineInterface
      *
      * @return Router
      */
-    public function getRouter()
+    public function getRouter(): Router
     {
         return $this->router;
     }
@@ -145,11 +145,11 @@ class InternalRequestEngine implements RequestEngineInterface
     /**
      * Prepare a response in case an error occurred.
      *
-     * @param object $exception \Exception or \Throwable
+     * @param \Throwable $exception
      * @param Http\Response $response
      * @return void
      */
-    protected function prepareErrorResponse($exception, Http\Response $response)
+    protected function prepareErrorResponse(\Throwable $exception, Http\Response $response)
     {
         $pathPosition = strpos($exception->getFile(), 'Packages/');
         $filePathAndName = ($pathPosition !== false) ? substr($exception->getFile(), $pathPosition) : $exception->getFile();

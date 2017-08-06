@@ -36,7 +36,7 @@ abstract class AbstractMessage
     /**
      * Entity body of this message
      *
-     * @var string
+     * @var mixed
      */
     protected $content = '';
 
@@ -59,7 +59,7 @@ abstract class AbstractMessage
      * @return Headers
      * @api
      */
-    public function getHeaders()
+    public function getHeaders(): Headers
     {
         return $this->headers;
     }
@@ -77,7 +77,7 @@ abstract class AbstractMessage
      * @return array|string An array of field values if multiple headers of that name exist, a string value if only one value exists and NULL if there is no such header.
      * @api
      */
-    public function getHeader($name)
+    public function getHeader(string $name)
     {
         return $this->headers->get($name);
     }
@@ -89,7 +89,7 @@ abstract class AbstractMessage
      * @return boolean
      * @api
      */
-    public function hasHeader($name)
+    public function hasHeader(string $name): bool
     {
         return $this->headers->has($name);
     }
@@ -111,7 +111,7 @@ abstract class AbstractMessage
      * @throws \InvalidArgumentException
      * @api
      */
-    public function setHeader($name, $values, $replaceExistingHeader = true)
+    public function setHeader(string $name, $values, bool $replaceExistingHeader = true)
     {
         switch ($name) {
             case 'Content-Type':
@@ -134,7 +134,7 @@ abstract class AbstractMessage
     /**
      * Explicitly sets the content of the message body
      *
-     * @param string $content The body content
+     * @param mixed $content The body content
      * @return self This message, for method chaining
      * @api
      */
@@ -147,7 +147,7 @@ abstract class AbstractMessage
     /**
      * Returns the content of the message body
      *
-     * @return string The response content
+     * @return mixed The response content
      * @api
      */
     public function getContent()
@@ -166,7 +166,7 @@ abstract class AbstractMessage
      * @see http://www.iana.org/assignments/character-sets
      * @api
      */
-    public function setCharset($charset)
+    public function setCharset(string $charset)
     {
         $this->charset = $charset;
 
@@ -192,7 +192,7 @@ abstract class AbstractMessage
      * @return string An IANA character set identifier
      * @api
      */
-    public function getCharset()
+    public function getCharset(): string
     {
         return $this->charset;
     }
@@ -204,7 +204,7 @@ abstract class AbstractMessage
      * @return void
      * @api
      */
-    public function setVersion($version)
+    public function setVersion(string $version)
     {
         $this->version = $version;
     }
@@ -215,7 +215,7 @@ abstract class AbstractMessage
      * @return string
      * @api
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         return $this->version;
     }
@@ -243,7 +243,7 @@ abstract class AbstractMessage
      * @return Cookie The cookie or NULL if no such cookie exists
      * @api
      */
-    public function getCookie($name)
+    public function getCookie(string $name): Cookie
     {
         return $this->headers->getCookie($name);
     }
@@ -256,7 +256,7 @@ abstract class AbstractMessage
      * @return array An array of Cookie objects
      * @api
      */
-    public function getCookies()
+    public function getCookies(): array
     {
         return $this->headers->getCookies();
     }
@@ -270,7 +270,7 @@ abstract class AbstractMessage
      * @return boolean
      * @api
      */
-    public function hasCookie($name)
+    public function hasCookie(string $name): bool
     {
         return $this->headers->hasCookie($name);
     }
@@ -289,7 +289,7 @@ abstract class AbstractMessage
      * @return void
      * @api
      */
-    public function removeCookie($name)
+    public function removeCookie(string $name)
     {
         $this->headers->removeCookie($name);
     }
@@ -301,5 +301,5 @@ abstract class AbstractMessage
      * @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html chapter 4.1 "Message Types"
      * @api
      */
-    abstract public function getStartLine();
+    abstract public function getStartLine(): string;
 }

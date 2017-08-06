@@ -64,7 +64,7 @@ class ComponentContext
      * @return Request
      * @api
      */
-    public function getHttpRequest()
+    public function getHttpRequest(): Request
     {
         return $this->httpRequest;
     }
@@ -83,7 +83,7 @@ class ComponentContext
      * @return Response
      * @api
      */
-    public function getHttpResponse()
+    public function getHttpResponse(): Response
     {
         return $this->httpResponse;
     }
@@ -104,9 +104,9 @@ class ComponentContext
      * @return mixed
      * @api
      */
-    public function getParameter($componentClassName, $parameterName)
+    public function getParameter(string $componentClassName, string $parameterName)
     {
-        return isset($this->parameters[$componentClassName][$parameterName]) ? $this->parameters[$componentClassName][$parameterName] : null;
+        return $this->parameters[$componentClassName][$parameterName] ?? null;
     }
 
     /**
@@ -115,7 +115,7 @@ class ComponentContext
      * @param mixed $value
      * @api
      */
-    public function setParameter($componentClassName, $parameterName, $value)
+    public function setParameter(string $componentClassName, string $parameterName, $value)
     {
         if (!isset($this->parameters[$componentClassName])) {
             $this->parameters[$componentClassName] = [];

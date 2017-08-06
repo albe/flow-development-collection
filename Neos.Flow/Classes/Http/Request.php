@@ -129,7 +129,7 @@ class Request extends AbstractMessage
      * @return Request
      * @api
      */
-    public static function create(Uri $uri, $method = 'GET', array $arguments = [], array $files = [], array $server = [])
+    public static function create(Uri $uri, string $method = 'GET', array $arguments = [], array $files = [], array $server = []): Request
     {
         $get = $uri->getArguments();
         $post = $arguments;
@@ -178,7 +178,7 @@ class Request extends AbstractMessage
      * @return Request
      * @api
      */
-    public static function createFromEnvironment()
+    public static function createFromEnvironment(): Request
     {
         $request = new static($_GET, $_POST, $_FILES, $_SERVER);
         $request->setContent(null);
@@ -203,7 +203,7 @@ class Request extends AbstractMessage
      * @return Uri
      * @api
      */
-    public function getUri()
+    public function getUri(): Uri
     {
         return $this->uri;
     }
@@ -214,7 +214,7 @@ class Request extends AbstractMessage
      * @return Uri
      * @api
      */
-    public function getBaseUri()
+    public function getBaseUri(): Uri
     {
         if ($this->baseUri === null) {
             $this->detectBaseUri();
@@ -225,7 +225,7 @@ class Request extends AbstractMessage
     /**
      * @param Uri $baseUri
      */
-    public function setBaseUri($baseUri)
+    public function setBaseUri(Uri $baseUri)
     {
         $this->baseUri = $baseUri;
     }
@@ -236,7 +236,7 @@ class Request extends AbstractMessage
      * @return boolean
      * @api
      */
-    public function isSecure()
+    public function isSecure(): bool
     {
         return $this->uri->getScheme() === 'https';
     }
@@ -248,7 +248,7 @@ class Request extends AbstractMessage
      * @return void
      * @api
      */
-    public function setMethod($method)
+    public function setMethod(string $method)
     {
         $this->method = $method;
     }
@@ -259,7 +259,7 @@ class Request extends AbstractMessage
      * @return string The request method
      * @api
      */
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
@@ -270,7 +270,7 @@ class Request extends AbstractMessage
      * @return integer
      * @api
      */
-    public function getPort()
+    public function getPort(): int
     {
         return $this->uri->getPort();
     }
@@ -282,7 +282,7 @@ class Request extends AbstractMessage
      * @return boolean
      * @api
      */
-    public function isMethodSafe()
+    public function isMethodSafe(): bool
     {
         return (in_array($this->method, ['GET', 'HEAD']));
     }
@@ -296,7 +296,7 @@ class Request extends AbstractMessage
      * @return array
      * @api
      */
-    public function getArguments()
+    public function getArguments(): array
     {
         return $this->arguments;
     }
@@ -309,7 +309,7 @@ class Request extends AbstractMessage
      * @return boolean
      * @api
      */
-    public function hasArgument($name)
+    public function hasArgument(string $name): bool
     {
         return isset($this->arguments[$name]);
     }
@@ -321,9 +321,9 @@ class Request extends AbstractMessage
      * @return mixed Value of the specified argument or NULL if it does not exist
      * @api
      */
-    public function getArgument($name)
+    public function getArgument(string $name)
     {
-        return (isset($this->arguments[$name]) ? $this->arguments[$name] : null);
+        return ($this->arguments[$name] ?? null);
     }
 
     /**
@@ -365,7 +365,7 @@ class Request extends AbstractMessage
      * @api
      * @throws Exception
      */
-    public function getContent($asResource = false)
+    public function getContent(bool $asResource = false)
     {
         if ($asResource === true) {
             if ($this->content !== null) {
@@ -392,7 +392,7 @@ class Request extends AbstractMessage
      *
      * @return array
      */
-    public function getServerParams()
+    public function getServerParams(): array
     {
         return $this->server;
     }
@@ -410,7 +410,7 @@ class Request extends AbstractMessage
      *
      * @return mixed[] Attributes derived from the request.
      */
-    public function getAttributes()
+    public function getAttributes(): array
     {
         return $this->attributes;
     }
@@ -432,7 +432,7 @@ class Request extends AbstractMessage
      * @param mixed $default Default value to return if the attribute does not exist.
      * @return mixed
      */
-    public function getAttribute($name, $default = null)
+    public function getAttribute(string $name, $default = null)
     {
         if (isset($this->attributes[$name])) {
             return $this->attributes[$name];
@@ -457,7 +457,7 @@ class Request extends AbstractMessage
      * @param mixed $value The value of the attribute.
      * @return self
      */
-    public function withAttribute($name, $value)
+    public function withAttribute(string $name, $value): self
     {
         $request = clone $this;
         $request->setAttribute($name, $value);
@@ -468,7 +468,7 @@ class Request extends AbstractMessage
      * @param string $name The attribute name.
      * @param mixed $value The value of the attribute.
      */
-    protected function setAttribute($name, $value)
+    protected function setAttribute(string $name, $value)
     {
         $this->attributes[$name] = $value;
     }
@@ -489,7 +489,7 @@ class Request extends AbstractMessage
      * @param string $name The attribute name.
      * @return self
      */
-    public function withoutAttribute($name)
+    public function withoutAttribute(string $name): self
     {
         $request = clone $this;
         $request->unsetAttribute($name);
@@ -499,7 +499,7 @@ class Request extends AbstractMessage
     /**
      * @param string $name The attribute name.
      */
-    protected function unsetAttribute($name)
+    protected function unsetAttribute(string $name)
     {
         unset($this->attributes[$name]);
     }
@@ -514,7 +514,7 @@ class Request extends AbstractMessage
      *
      * Don't rely on the client IP address as the only security measure!
      *
-     * @return string The client's IP address
+     * @return string|null The client's IP address or NULL if no remote address is available
      * @api
      */
     public function getClientIpAddress()
@@ -530,7 +530,7 @@ class Request extends AbstractMessage
                 return $ipAddress;
             }
         }
-        return (isset($this->server['REMOTE_ADDR']) ? $this->server['REMOTE_ADDR'] : null);
+        return ($this->server['REMOTE_ADDR'] ?? null);
     }
 
     /**
@@ -546,14 +546,13 @@ class Request extends AbstractMessage
      * @return array A list of media types and sub types
      * @api
      */
-    public function getAcceptedMediaTypes()
+    public function getAcceptedMediaTypes(): array
     {
         $rawValues = $this->headers->get('Accept');
         if (empty($rawValues)) {
             return ['*/*'];
         }
-        $acceptedMediaTypes = self::parseContentNegotiationQualityValues($rawValues);
-        return $acceptedMediaTypes;
+        return self::parseContentNegotiationQualityValues($rawValues);
     }
 
     /**
@@ -565,7 +564,7 @@ class Request extends AbstractMessage
      * @return string The media type and sub type which matched, NULL if none matched
      * @api
      */
-    public function getNegotiatedMediaType(array $supportedMediaTypes, $trim = true)
+    public function getNegotiatedMediaType(array $supportedMediaTypes, bool $trim = true)
     {
         $negotiatedMediaType = null;
         $acceptedMediaTypes = $this->getAcceptedMediaTypes();
@@ -587,7 +586,7 @@ class Request extends AbstractMessage
      * @return string Relative path and name of the PHP script as accessed through the web
      * @api
      */
-    public function getScriptRequestPathAndFilename()
+    public function getScriptRequestPathAndFilename(): string
     {
         if (isset($this->server['SCRIPT_NAME'])) {
             return $this->server['SCRIPT_NAME'];
@@ -605,7 +604,7 @@ class Request extends AbstractMessage
      * @return string Relative path to the PHP script as accessed through the web
      * @api
      */
-    public function getScriptRequestPath()
+    public function getScriptRequestPath(): string
     {
         $requestPathSegments = explode('/', $this->getScriptRequestPathAndFilename());
         array_pop($requestPathSegments);
@@ -617,7 +616,7 @@ class Request extends AbstractMessage
      *
      * @return string
      */
-    public function getRelativePath()
+    public function getRelativePath(): string
     {
         $baseUriLength = strlen($this->getBaseUri()->getPath());
         if ($baseUriLength >= strlen($this->getUri()->getPath())) {
@@ -636,7 +635,7 @@ class Request extends AbstractMessage
      * @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1
      * @api
      */
-    public function getRequestLine()
+    public function getRequestLine(): string
     {
         $requestUri = $this->uri->getPath() .
             ($this->uri->getQuery() ? '?' . $this->uri->getQuery() : '') .
@@ -651,7 +650,7 @@ class Request extends AbstractMessage
      * @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html chapter 4.1 "Message Types"
      * @api
      */
-    public function getStartLine()
+    public function getStartLine(): string
     {
         return $this->getRequestLine();
     }
@@ -681,7 +680,7 @@ class Request extends AbstractMessage
      * @param array $uploadArguments Arguments as found in $_FILES
      * @return array the unified arguments
      */
-    protected function buildUnifiedArguments(array $getArguments, array $postArguments, array $uploadArguments)
+    protected function buildUnifiedArguments(array $getArguments, array $postArguments, array $uploadArguments): array
     {
         $arguments = $getArguments;
         $arguments = Arrays::arrayMergeRecursiveOverrule($arguments, $postArguments);
@@ -695,7 +694,7 @@ class Request extends AbstractMessage
      * @param array $convolutedFiles The _FILES superglobal
      * @return array Untangled files
      */
-    protected function untangleFilesArray(array $convolutedFiles)
+    protected function untangleFilesArray(array $convolutedFiles): array
     {
         $untangledFiles = [];
 
@@ -737,19 +736,17 @@ class Request extends AbstractMessage
      * @param string $firstLevelFieldName
      * @return array An array of paths (as strings) in the format "key1/key2/key3" ...
      */
-    protected function calculateFieldPaths(array $structure, $firstLevelFieldName = null)
+    protected function calculateFieldPaths(array $structure, string $firstLevelFieldName = null): array
     {
         $fieldPaths = [];
-        if (is_array($structure)) {
-            foreach ($structure as $key => $subStructure) {
-                $fieldPath = ($firstLevelFieldName !== null ? $firstLevelFieldName . '/' : '') . $key;
-                if (is_array($subStructure)) {
-                    foreach ($this->calculateFieldPaths($subStructure) as $subFieldPath) {
-                        $fieldPaths[] = $fieldPath . '/' . $subFieldPath;
-                    }
-                } else {
-                    $fieldPaths[] = $fieldPath;
+        foreach ($structure as $key => $subStructure) {
+            $fieldPath = ($firstLevelFieldName !== null ? $firstLevelFieldName . '/' : '') . $key;
+            if (is_array($subStructure)) {
+                foreach ($this->calculateFieldPaths($subStructure) as $subFieldPath) {
+                    $fieldPaths[] = $fieldPath . '/' . $subFieldPath;
                 }
+            } else {
+                $fieldPaths[] = $fieldPath;
             }
         }
         return $fieldPaths;
@@ -762,7 +759,7 @@ class Request extends AbstractMessage
      * @param string $rawValues The raw Accept* Header field value
      * @return array The parsed list of field values, ordered by user preference
      */
-    public static function parseContentNegotiationQualityValues($rawValues)
+    public static function parseContentNegotiationQualityValues(string $rawValues): array
     {
         $acceptedTypes = array_map(
             function ($acceptType) {
@@ -801,7 +798,7 @@ class Request extends AbstractMessage
      * @return string The HTTP headers, one per line, separated by \r\n as required by RFC 2616 sec 5
      * @api
      */
-    public function renderHeaders()
+    public function renderHeaders(): string
     {
         $headers = $this->getRequestLine();
 
@@ -820,8 +817,13 @@ class Request extends AbstractMessage
      * @return string The same as getContent()
      * @api
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->renderHeaders() . "\r\n" . $this->getContent();
+        try {
+            $content = $this->getContent(false);
+        } catch (\Throwable $e) {
+            $content = '';
+        }
+        return $this->renderHeaders() . "\r\n" . $content;
     }
 }

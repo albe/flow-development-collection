@@ -96,7 +96,7 @@ class Browser
      * @return void
      * @see Message::setHeader()
      */
-    public function addAutomaticRequestHeader($name, $values)
+    public function addAutomaticRequestHeader(string $name, $values)
     {
         $this->automaticRequestHeaders->set($name, $values, true);
     }
@@ -107,7 +107,7 @@ class Browser
      * @param string $name Name of the header, for example "Location", "Content-Description" etc.
      * @return void
      */
-    public function removeAutomaticRequestHeader($name)
+    public function removeAutomaticRequestHeader(string $name)
     {
         $this->automaticRequestHeaders->remove($name);
     }
@@ -128,7 +128,7 @@ class Browser
      * @throws InfiniteRedirectionException
      * @api
      */
-    public function request($uri, $method = 'GET', array $arguments = [], array $files = [], array $server = [], $content = null)
+    public function request($uri, string $method = 'GET', array $arguments = [], array $files = [], array $server = [], string $content = null): Response
     {
         if (is_string($uri)) {
             $uri = new Uri($uri);
@@ -162,9 +162,9 @@ class Browser
      * @param boolean $flag
      * @return void
      */
-    public function setFollowRedirects($flag)
+    public function setFollowRedirects(bool $flag)
     {
-        $this->followRedirects = (boolean)$flag;
+        $this->followRedirects = $flag;
     }
 
     /**
@@ -174,7 +174,7 @@ class Browser
      * @return Response
      * @api
      */
-    public function sendRequest(Request $request)
+    public function sendRequest(Request $request): Response
     {
         foreach ($this->automaticRequestHeaders->getAll() as $name => $values) {
             $request->setHeader($name, $values);
@@ -188,7 +188,7 @@ class Browser
     /**
      * Returns the response received after the last request.
      *
-     * @return Response The HTTP response or NULL if there wasn't a response yet
+     * @return Response|null The HTTP response or NULL if there wasn't a response yet
      * @api
      */
     public function getLastResponse()
@@ -199,7 +199,7 @@ class Browser
     /**
      * Returns the last request executed.
      *
-     * @return Request The HTTP request or NULL if there wasn't a request yet
+     * @return Request|null The HTTP request or NULL if there wasn't a request yet
      * @api
      */
     public function getLastRequest()
@@ -213,7 +213,7 @@ class Browser
      * @return RequestEngineInterface
      * @api
      */
-    public function getRequestEngine()
+    public function getRequestEngine(): RequestEngineInterface
     {
         return $this->requestEngine;
     }
@@ -229,7 +229,7 @@ class Browser
      * @return \Symfony\Component\DomCrawler\Crawler
      * @api
      */
-    public function getCrawler()
+    public function getCrawler(): Crawler
     {
         $crawler = new Crawler(null, $this->lastRequest->getBaseUri());
         $crawler->addContent($this->lastResponse->getContent(), $this->lastResponse->getHeader('Content-Type'));
@@ -245,7 +245,7 @@ class Browser
      * @return \Symfony\Component\DomCrawler\Form
      * @api
      */
-    public function getForm($xpath = '//form')
+    public function getForm(string $xpath = '//form'): Form
     {
         return $this->getCrawler()->filterXPath($xpath)->form();
     }
@@ -257,7 +257,7 @@ class Browser
      * @return Response
      * @api
      */
-    public function submit(Form $form)
+    public function submit(Form $form): Response
     {
         return $this->request($form->getUri(), $form->getMethod(), $form->getPhpValues(), $form->getPhpFiles());
     }

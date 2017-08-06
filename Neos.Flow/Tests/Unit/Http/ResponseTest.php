@@ -177,16 +177,6 @@ class ResponseTest extends UnitTestCase
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
-     */
-    public function setStatusThrowsExceptionOnNonNumericCode()
-    {
-        $response = new Response();
-        $response->setStatus('400');
-    }
-
-    /**
-     * @test
      */
     public function getStatusReturnsTheStatusCodeAndMessage()
     {

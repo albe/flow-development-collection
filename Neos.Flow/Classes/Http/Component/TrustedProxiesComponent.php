@@ -71,9 +71,9 @@ class TrustedProxiesComponent implements ComponentInterface
      * @param Request $request The request to get the trusted proxy header from
      * @return \Iterator An array of the values for this header type or NULL if this header type should not be trusted
      */
-    protected function getTrustedProxyHeaderValues($type, Request $request)
+    protected function getTrustedProxyHeaderValues(string $type, Request $request)
     {
-        $trustedHeaders = isset($this->settings['headers'][$type]) ? $this->settings['headers'][$type] : '';
+        $trustedHeaders = $this->settings['headers'][$type] ?? '';
         if ($trustedHeaders === '' || !$request->getAttribute(Request::ATTRIBUTE_TRUSTED_PROXY)) {
             yield null;
             return;
@@ -96,7 +96,7 @@ class TrustedProxiesComponent implements ComponentInterface
      * @param Request $request The request to get the trusted proxy header from
      * @return mixed|null The first value of this header type or NULL if this header type should not be trusted
      */
-    protected function getFirstTrustedProxyHeaderValue($type, Request $request)
+    protected function getFirstTrustedProxyHeaderValue(string $type, Request $request)
     {
         $values = $this->getTrustedProxyHeaderValues($type, $request)->current();
         return $values !== null ? reset($values) : null;
@@ -108,7 +108,7 @@ class TrustedProxiesComponent implements ComponentInterface
      * @param string $ipAddress
      * @return bool
      */
-    protected function ipIsTrustedProxy($ipAddress)
+    protected function ipIsTrustedProxy(string $ipAddress): bool
     {
         if (filter_var($ipAddress, FILTER_VALIDATE_IP) === false) {
             return false;
@@ -130,7 +130,7 @@ class TrustedProxiesComponent implements ComponentInterface
      * @param Request $request
      * @return bool If the server REMOTE_ADDR is from a trusted proxy
      */
-    protected function isFromTrustedProxy(Request $request)
+    protected function isFromTrustedProxy(Request $request): bool
     {
         $server = $request->getServerParams();
         if (!isset($server['REMOTE_ADDR'])) {

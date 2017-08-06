@@ -62,7 +62,7 @@ class Headers
      * @param array $server An array similar or equal to $_SERVER, containing headers in the form of "HTTP_FOO_BAR"
      * @return Headers
      */
-    public static function createFromServer(array $server)
+    public static function createFromServer(array $server): Headers
     {
         $headerFields = [];
         if (isset($server['PHP_AUTH_USER']) && isset($server['PHP_AUTH_PW'])) {
@@ -73,7 +73,7 @@ class Headers
             if (strpos($name, 'HTTP_') === 0) {
                 $name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
                 $headerFields[$name] = $value;
-            } elseif ($name == 'REDIRECT_REMOTE_AUTHORIZATION' && !isset($headerFields['Authorization'])) {
+            } elseif ($name === 'REDIRECT_REMOTE_AUTHORIZATION' && !isset($headerFields['Authorization'])) {
                 $headerFields['Authorization'] = $value;
             } elseif (in_array($name, ['CONTENT_TYPE', 'CONTENT_LENGTH'])) {
                 $name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $name))));
@@ -100,7 +100,7 @@ class Headers
      * @throws \InvalidArgumentException
      * @api
      */
-    public function set($name, $values, $replaceExistingHeader = true)
+    public function set(string $name, $values, bool $replaceExistingHeader = true)
     {
         if (strtoupper(substr($name, 0, 10)) === 'SET-COOKIE') {
             throw new \InvalidArgumentException('The "Set-Cookie" headers must be set via setCookie().', 1345128153);
@@ -142,10 +142,10 @@ class Headers
      * Dates are returned as DateTime objects with the timezone set to GMT.
      *
      * @param string $name Name of the header, for example "Location", "Content-Description" etc.
-     * @return array|string An array of field values if multiple headers of that name exist, a string value if only one value exists and NULL if there is no such header.
+     * @return array|string|null An array of field values if multiple headers of that name exist, a string value if only one value exists and NULL if there is no such header.
      * @api
      */
-    public function get($name)
+    public function get(string $name)
     {
         if ($name === 'Cache-Control') {
             return $this->getCacheControlHeader();
@@ -174,7 +174,7 @@ class Headers
      * @return array
      * @api
      */
-    public function getAll()
+    public function getAll(): array
     {
         $fields = $this->fields;
         $cacheControlHeader = $this->getCacheControlHeader();
@@ -191,7 +191,7 @@ class Headers
      * @return boolean
      * @api
      */
-    public function has($name)
+    public function has(string $name): bool
     {
         if ($name === 'Cache-Control') {
             return ($this->getCacheControlHeader() !== null);
@@ -206,7 +206,7 @@ class Headers
      * @return void
      * @api
      */
-    public function remove($name)
+    public function remove(string $name)
     {
         unset($this->fields[$name]);
     }
@@ -230,7 +230,7 @@ class Headers
      * @return Cookie The cookie or NULL if no such cookie exists
      * @api
      */
-    public function getCookie($name)
+    public function getCookie(string $name): Cookie
     {
         return isset($this->cookies[$name]) ? $this->cookies[$name] : null;
     }
@@ -241,7 +241,7 @@ class Headers
      * @return array
      * @api
      */
-    public function getCookies()
+    public function getCookies(): array
     {
         return $this->cookies;
     }
@@ -253,7 +253,7 @@ class Headers
      * @return boolean
      * @api
      */
-    public function hasCookie($name)
+    public function hasCookie(string $name): bool
     {
         return isset($this->cookies[$name]);
     }
@@ -270,7 +270,7 @@ class Headers
      * @return void
      * @api
      */
-    public function removeCookie($name)
+    public function removeCookie(string $name)
     {
         unset($this->cookies[$name]);
     }
@@ -282,7 +282,7 @@ class Headers
      * @return void
      * @api
      */
-    public function eatCookie($name)
+    public function eatCookie(string $name)
     {
         $this->removeCookie($name);
     }
@@ -296,7 +296,7 @@ class Headers
      * @return void
      * @api
      */
-    public function setCacheControlDirective($name, $value = null)
+    public function setCacheControlDirective(string $name, string $value = null)
     {
         switch ($name) {
             case 'public':
@@ -325,7 +325,7 @@ class Headers
      * @param string $name Name of the directive, for example "public"
      * @return void
      */
-    public function removeCacheControlDirective($name)
+    public function removeCacheControlDirective(string $name)
     {
         switch ($name) {
             case 'public':
@@ -355,7 +355,7 @@ class Headers
      * @return mixed
      * @api
      */
-    public function getCacheControlDirective($name)
+    public function getCacheControlDirective(string $name)
     {
         $value = null;
 
@@ -400,7 +400,7 @@ class Headers
      * @return void
      * @see set()
      */
-    protected function setCacheControlDirectivesFromRawHeader($rawFieldValue)
+    protected function setCacheControlDirectivesFromRawHeader(string $rawFieldValue)
     {
         foreach (array_keys($this->cacheDirectives) as $key) {
             $this->cacheDirectives[$key] = '';
@@ -422,7 +422,7 @@ class Headers
      * Renders and returns a Cache-Control header, based on the previously set
      * cache control directives.
      *
-     * @return string Either the value of the header or NULL if it shall be omitted
+     * @return string|null Either the value of the header or NULL if it shall be omitted
      * @see get()
      */
     protected function getCacheControlHeader()
@@ -442,7 +442,7 @@ class Headers
      * @return void
      * @see set()
      */
-    protected function setCookiesFromRawHeader($rawFieldValue)
+    protected function setCookiesFromRawHeader(string $rawFieldValue)
     {
         $cookiePairs = explode(';', $rawFieldValue);
         foreach ($cookiePairs as $cookiePair) {

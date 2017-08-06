@@ -51,7 +51,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @param integer $statusCode
      * @return string
      */
-    public static function getStatusMessageByCode($statusCode)
+    public static function getStatusMessageByCode(int $statusCode): string
     {
         $statusMessages = [
                 100 => 'Continue',
@@ -100,7 +100,7 @@ class Response extends AbstractMessage implements ResponseInterface
                 507 => 'Insufficient Storage',
                 509 => 'Bandwidth Limit Exceeded',
         ];
-        return isset($statusMessages[$statusCode]) ? $statusMessages[$statusCode] : 'Unknown Status';
+        return $statusMessages[$statusCode] ?? 'Unknown Status';
     }
 
     /**
@@ -124,7 +124,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @throws \InvalidArgumentException
      * @return Response
      */
-    public static function createFromRaw($rawResponse, Response $parentResponse = null)
+    public static function createFromRaw(string $rawResponse, Response $parentResponse = null): Response
     {
         $response = new static($parentResponse);
 
@@ -173,7 +173,7 @@ class Response extends AbstractMessage implements ResponseInterface
      *
      * @return Response the parent response, or NULL if none
      */
-    public function getParentResponse()
+    public function getParentResponse(): Response
     {
         return $this->parentResponse;
     }
@@ -185,7 +185,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function appendContent($content)
+    public function appendContent($content): Response
     {
         $this->content .= $content;
         return $this;
@@ -194,7 +194,7 @@ class Response extends AbstractMessage implements ResponseInterface
     /**
      * Returns the response content without sending it.
      *
-     * @return string The response content
+     * @return mixed The response content
      * @api
      */
     public function getContent()
@@ -211,16 +211,13 @@ class Response extends AbstractMessage implements ResponseInterface
      * @throws \InvalidArgumentException if the specified status code is not valid
      * @api
      */
-    public function setStatus($code, $message = null)
+    public function setStatus(int $code, string $message = null): Response
     {
-        if (!is_int($code)) {
-            throw new \InvalidArgumentException('The HTTP status code must be of type integer, ' . gettype($code) . ' given.', 1220526013);
-        }
         if ($message === null) {
             $message = self::getStatusMessageByCode($code);
         }
         $this->statusCode = $code;
-        $this->statusMessage = ($message === null) ? self::$statusMessages[$code] : $message;
+        $this->statusMessage = $message ?? self::$statusMessages[$code];
         return $this;
     }
 
@@ -230,7 +227,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return string The status code and status message, eg. "404 Not Found"
      * @api
      */
-    public function getStatus()
+    public function getStatus(): string
     {
         return $this->statusCode . ' ' . $this->statusMessage;
     }
@@ -241,7 +238,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return integer The status code, eg. 404
      * @api
      */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
@@ -291,7 +288,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setDate($date)
+    public function setDate($date): Response
     {
         $this->headers->set('Date', $date);
         return $this;
@@ -302,7 +299,7 @@ class Response extends AbstractMessage implements ResponseInterface
      *
      * The returned date is configured to be in the GMT timezone.
      *
-     * @return \DateTime The date of this response
+     * @return \DateTime|null The date of this response
      * @api
      */
     public function getDate()
@@ -321,7 +318,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setLastModified($date)
+    public function setLastModified($date): Response
     {
         $this->headers->set('Last-Modified', $date);
         return $this;
@@ -333,7 +330,7 @@ class Response extends AbstractMessage implements ResponseInterface
      *
      * The returned date is configured to be in the GMT timezone.
      *
-     * @return \DateTime The last modification date or NULL
+     * @return \DateTime|null The last modification date or NULL
      * @api
      */
     public function getLastModified()
@@ -359,7 +356,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setExpires($date)
+    public function setExpires($date): Response
     {
         $this->headers->set('Expires', $date);
         return $this;
@@ -371,7 +368,7 @@ class Response extends AbstractMessage implements ResponseInterface
      *
      * The returned date is configured to be in the GMT timezone.
      *
-     * @return \DateTime The expiration date or NULL
+     * @return \DateTime|null The expiration date or NULL
      * @api
      */
     public function getExpires()
@@ -392,15 +389,14 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return integer The age in seconds
      * @api
      */
-    public function getAge()
+    public function getAge(): int
     {
         if ($this->headers->has('Age')) {
             return $this->headers->get('Age');
-        } else {
-            $dateTimestamp = $this->headers->get('Date')->getTimestamp();
-            $nowTimestamp = $this->now->getTimestamp();
-            return ($nowTimestamp > $dateTimestamp) ? ($nowTimestamp - $dateTimestamp) : 0;
         }
+        $dateTimestamp = $this->headers->get('Date')->getTimestamp();
+        $nowTimestamp = $this->now->getTimestamp();
+        return ($nowTimestamp > $dateTimestamp) ? ($nowTimestamp - $dateTimestamp) : 0;
     }
 
     /**
@@ -412,7 +408,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setMaximumAge($age)
+    public function setMaximumAge(int $age): Response
     {
         $this->headers->setCacheControlDirective('max-age', $age);
         return $this;
@@ -424,7 +420,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * This method returns the value from the "max-age" directive in the
      * Cache-Control header.
      *
-     * @return integer The maximum age in seconds, or NULL if none has been defined
+     * @return integer|null The maximum age in seconds, or NULL if none has been defined
      * @api
      */
     public function getMaximumAge()
@@ -442,7 +438,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setSharedMaximumAge($maximumAge)
+    public function setSharedMaximumAge(int $maximumAge): Response
     {
         $this->headers->setCacheControlDirective('s-maxage', $maximumAge);
         return $this;
@@ -455,7 +451,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * This method returns the value from the "s-maxage" directive in the
      * Cache-Control header.
      *
-     * @return integer The maximum age in seconds, or NULL if none has been defined
+     * @return integer|null The maximum age in seconds, or NULL if none has been defined
      * @api
      */
     public function getSharedMaximumAge()
@@ -469,7 +465,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return array The HTTP headers
      * @api
      */
-    public function renderHeaders()
+    public function renderHeaders(): array
     {
         $preparedHeaders = [];
         $statusHeader = rtrim($this->getStatusLine(), "\r\n");
@@ -493,7 +489,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setPublic()
+    public function setPublic(): Response
     {
         $this->headers->setCacheControlDirective('public');
         return $this;
@@ -508,7 +504,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return Response This response, for method chaining
      * @api
      */
-    public function setPrivate()
+    public function setPrivate(): Response
     {
         $this->headers->setCacheControlDirective('private');
         return $this;
@@ -614,7 +610,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6.1
      * @api
      */
-    public function getStatusLine()
+    public function getStatusLine(): string
     {
         return sprintf("%s %s %s\r\n", $this->version, $this->statusCode, $this->statusMessage);
     }
@@ -626,7 +622,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html chapter 4.1 "Message Types"
      * @api
      */
-    public function getStartLine()
+    public function getStartLine(): string
     {
         return $this->getStatusLine();
     }
@@ -637,7 +633,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * @return string The same as getContent(), an empty string if getContent() returns a value which can't be cast into a string
      * @api
      */
-    public function __toString()
+    public function __toString(): string
     {
         $output = $this->getContent();
         if (is_object($output) || is_array($output)) {
