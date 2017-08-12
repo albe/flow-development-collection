@@ -1,10 +1,8 @@
 <?php
 namespace TYPO3\Flow\Tests\Behavior\Features\Bootstrap;
 
-require_once(__DIR__ . '/SubProcess/SubProcess.php');
-
 use TYPO3\Flow\Configuration\ConfigurationManager;
-use TYPO3\Flow\Tests\Features\Bootstrap\SubProcess\SubProcess;
+use TYPO3\Flow\Cli\SubProcess;
 use TYPO3\Flow\Cache\CacheManager;
 use PHPUnit_Framework_Assert as Assert;
 

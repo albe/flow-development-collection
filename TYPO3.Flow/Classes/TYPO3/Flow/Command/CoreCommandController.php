@@ -27,6 +27,7 @@ use TYPO3\Flow\Mvc\Dispatcher;
 use TYPO3\Flow\Object\DependencyInjection\ProxyClassBuilder;
 use TYPO3\Flow\Object\Proxy\Compiler;
 use TYPO3\Flow\SignalSlot\Dispatcher as SignalSlotDispatcher;
+use TYPO3\Flow\Cli\SubProcess;
 use TYPO3\Flow\Utility\Environment;
 use TYPO3\Flow\Utility\Files;
 
@@ -278,8 +279,7 @@ class CoreCommandController extends CommandController
             $this->outputLine('Interactive Shell is not available on this system!');
             $this->quit(1);
         }
-        $subProcess = false;
-        $pipes = [];
+        $subProcess = new SubProcess($this->bootstrap->getContext());
 
         $historyPathAndFilename = getenv('HOME') . '/.flow_' . md5(FLOW_PATH_ROOT);
         readline_read_history($historyPathAndFilename);
@@ -308,38 +308,19 @@ class CoreCommandController extends CommandController
             if ($this->bootstrap->isCompiletimeCommand($command->getCommandIdentifier())) {
                 $this->dispatcher->dispatch($request, $response);
                 $response->send();
-                if (is_resource($subProcess)) {
-                    $this->quitSubProcess($subProcess, $pipes);
-                }
+                $subProcess->quit();
+                $subProcess = new SubProcess($this->bootstrap->getContext());
             } else {
-                if (is_resource($subProcess)) {
-                    $subProcessStatus = proc_get_status($subProcess);
-                    if ($subProcessStatus['running'] === false) {
-                        proc_close($subProcess);
-                    }
-                };
-                if (!is_resource($subProcess)) {
-                    list($subProcess, $pipes) = $this->launchSubProcess();
-                    if ($subProcess === false || !is_array($pipes)) {
-                        echo "Failed launching the shell sub process for executing the runtime command.\n";
-                        continue;
-                    }
-                    $this->echoSubProcessResponse($pipes);
-                }
-
-                fwrite($pipes[0], $commandLine . "\n");
-                fflush($pipes[0]);
-                $this->echoSubProcessResponse($pipes);
+                echo $subProcess->execute($commandLine);
 
                 if ($command->isFlushingCaches()) {
-                    $this->quitSubProcess($subProcess, $pipes);
+                    $subProcess->quit();
+                    $subProcess = new SubProcess($this->bootstrap->getContext());
                 }
             }
         }
 
-        if (is_resource($subProcess)) {
-            $this->quitSubProcess($subProcess, $pipes);
-        }
+        $subProcess->quit();
 
         echo "Bye!\n";
     }
@@ -354,65 +335,6 @@ class CoreCommandController extends CommandController
     protected function emitFinishedCompilationRun($classCount)
     {
         $this->signalSlotDispatcher->dispatch(__CLASS__, 'finishedCompilationRun', [$classCount]);
-    }
-
-    /**
-     * Launch sub process
-     *
-     * @return array The new sub process and its STDIN, STDOUT, STDERR pipes – or FALSE if an error occurred.
-     * @throws \RuntimeException
-     */
-    protected function launchSubProcess()
-    {
-        $systemCommand = 'FLOW_ROOTPATH=' . FLOW_PATH_ROOT . ' FLOW_PATH_TEMPORARY_BASE=' . FLOW_PATH_TEMPORARY_BASE . ' ' . 'FLOW_CONTEXT=' . $this->bootstrap->getContext() . ' ' . PHP_BINARY . ' -c ' . php_ini_loaded_file() . ' ' . FLOW_PATH_FLOW . 'Scripts/flow.php' . ' --start-slave';
-        $descriptorSpecification = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'a']];
-        $subProcess = proc_open($systemCommand, $descriptorSpecification, $pipes);
-        if (!is_resource($subProcess)) {
-            throw new \RuntimeException('Could not execute sub process.');
-        }
-
-        $read = [$pipes[1]];
-        $write = null;
-        $except = null;
-        $readTimeout = 30;
-
-        stream_select($read, $write, $except, $readTimeout);
-
-        $subProcessStatus = proc_get_status($subProcess);
-        return ($subProcessStatus['running'] === true) ? [$subProcess, $pipes] : false;
-    }
-
-    /**
-     * Echoes the currently pending response from the sub process
-     *
-     * @param array $pipes
-     * @return void
-     */
-    protected function echoSubProcessResponse(array $pipes)
-    {
-        while (feof($pipes[1]) === false) {
-            $responseLine = fgets($pipes[1]);
-            if (trim($responseLine) === 'READY' || $responseLine === false) {
-                break;
-            }
-            echo($responseLine);
-        }
-    }
-
-    /**
-     * Cleanly terminates the given sub process
-     *
-     * @param resource $subProcess The sub process to quite
-     * @param array $pipes The current STDIN, STDOUT and STDERR pipes
-     * @return void
-     */
-    protected function quitSubProcess($subProcess, array $pipes)
-    {
-        fwrite($pipes[0], "QUIT\n");
-        fclose($pipes[0]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        proc_close($subProcess);
     }
 
     /**

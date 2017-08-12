@@ -1,5 +1,5 @@
 <?php
-namespace TYPO3\Flow\Tests\Features\Bootstrap\SubProcess;
+namespace TYPO3\Flow\Cli;
 
 use TYPO3\Flow\Core\ApplicationContext;
 
@@ -81,12 +81,13 @@ class SubProcess
     /**
      * Launch sub process
      *
-     * @return array The new sub process and its STDIN, STDOUT, STDERR pipes – or FALSE if an error occurred.
+     * @return array|boolean The new sub process and its STDIN, STDOUT, STDERR pipes – or FALSE if an error occurred.
      * @throws \RuntimeException
      */
     protected function launchSubProcess()
     {
-        $systemCommand = 'FLOW_ROOTPATH=' . FLOW_PATH_ROOT . ' FLOW_PATH_TEMPORARY_BASE=' . escapeshellarg(FLOW_PATH_TEMPORARY_BASE) . ' FLOW_CONTEXT=' . (string)$this->context . ' ' . PHP_BINARY . ' -c ' . php_ini_loaded_file() . ' ' . FLOW_PATH_FLOW . 'Scripts/flow.php' . ' --start-slave';
+        $phpBinary = $this->detectPhpBinary();
+        $systemCommand = 'FLOW_ROOTPATH=' . escapeshellarg(FLOW_PATH_ROOT) . ' FLOW_PATH_TEMPORARY_BASE=' . escapeshellarg(FLOW_PATH_TEMPORARY_BASE) . ' FLOW_CONTEXT=' . (string)$this->context . ' ' . $phpBinary . ' -c ' . escapeshellarg(php_ini_loaded_file()) . ' ' . escapeshellarg(FLOW_PATH_FLOW . 'Scripts/flow.php') . ' --start-slave';
         $descriptorSpecification = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'a']];
         $this->subProcess = proc_open($systemCommand, $descriptorSpecification, $this->pipes);
         if (!is_resource($this->subProcess)) {
@@ -102,6 +103,46 @@ class SubProcess
 
         $subProcessStatus = proc_get_status($this->subProcess);
         return ($subProcessStatus['running'] === true) ? [$this->subProcess, $this->pipes] : false;
+    }
+
+    /**
+     * Try to detect the PHP binary command that matches the currently executed PHP Version
+     * @return string
+     */
+    protected function detectPhpBinary()
+    {
+        $possiblePhpBinaries = [];
+        $possiblePhpBinaries[] = 'php';	// easy attempt, let OS find the correct path
+        if (in_array(PHP_SAPI, array('cli', 'cli-server', 'phpdbg'))) {
+            $possiblePhpBinaries[] = PHP_BINARY;    // PHP_BINARY is mostly correct in CLI SAPI mode
+        }
+        $possiblePhpBinaries[] = PHP_BINDIR . '/php';   // Try PHP_BINDIR, which might be correct if PHP was compiled on this machine and not moved
+        if ($phpPath = getenv('PHP_PATH')) {
+            $possiblePhpBinaries[] = $phpPath . '/php';
+        }
+        if ($phpPear = getenv('PHP_PEAR_PHP_BIN')) {
+            $possiblePhpBinaries[] = $phpPear;
+        }
+
+        foreach ($possiblePhpBinaries as $phpBinary) {
+            if (DIRECTORY_SEPARATOR === '/') {
+                $phpBinary = '"' . escapeshellcmd($phpBinary) . '"';
+            } else {
+                $phpBinary = escapeshellarg($phpBinary);
+            }
+
+            exec($phpBinary . ' -v', $phpVersionString);
+            if (!isset($phpVersionString[0]) || strpos($phpVersionString[0], 'PHP') !== 0) {
+                // not a PHP executable
+                continue;
+            }
+            $versionStringParts = explode(' ', $phpVersionString[0]);
+            $phpVersion = isset($versionStringParts[1]) ? trim($versionStringParts[1]) : null;
+            if ($phpVersion === PHP_VERSION) {
+                return $phpBinary;
+            }
+        }
+        throw new \RuntimeException('Could not find the PHP binary matching the current environment. Attempted ' . implode(',', array_map(function($v) { return '"' . $v. '"'; }, $possiblePhpBinaries)));
     }
 
     /**
