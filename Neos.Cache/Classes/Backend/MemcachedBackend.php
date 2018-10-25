@@ -380,13 +380,11 @@ class MemcachedBackend extends IndependentAbstractBackend implements TaggableBac
                 $identifiers[] = $entryIdentifier;
                 $this->memcache->set($this->identifierPrefix . 'tag_' . $tag, $identifiers);
             }
-
-            // Update identifier-to-tag index
-            $existingTags = $this->findTagsByIdentifier($entryIdentifier);
-            if (array_search($tag, $existingTags) === false) {
-                $this->memcache->set($this->identifierPrefix . 'ident_' . $entryIdentifier, array_merge($existingTags, $tags));
-            }
         }
+
+        // Update identifier-to-tag index
+        $existingTags = $this->findTagsByIdentifier($entryIdentifier);
+        $this->memcache->set($this->identifierPrefix . 'ident_' . $entryIdentifier, array_merge($existingTags, $tags));
     }
 
     /**

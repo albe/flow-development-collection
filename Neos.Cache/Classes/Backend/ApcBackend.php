@@ -260,13 +260,10 @@ class ApcBackend extends IndependentAbstractBackend implements TaggableBackendIn
                 $identifiers[] = $entryIdentifier;
                 apc_store($this->identifierPrefix . 'tag_' . $tag, $identifiers);
             }
-
-            // Update identifier-to-tag index
-            $existingTags = $this->findTagsByIdentifier($entryIdentifier);
-            if (array_search($entryIdentifier, $existingTags) === false) {
-                apc_store($this->identifierPrefix . 'ident_' . $entryIdentifier, array_merge($existingTags, $tags));
-            }
         }
+        // Update identifier-to-tag index
+        $existingTags = $this->findTagsByIdentifier($entryIdentifier);
+        apc_store($this->identifierPrefix . 'ident_' . $entryIdentifier, array_merge($existingTags, $tags));
     }
 
     /**
